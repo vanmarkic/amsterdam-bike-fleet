@@ -131,17 +131,66 @@ This creates platform-specific installers in `src-tauri/target/release/bundle/`:
 
 ### Cross-Platform Builds
 
-#### Build for Windows (from any platform)
+#### Build for macOS (Intel and Apple Silicon)
 
 ```bash
-# Install Windows target
-rustup target add x86_64-pc-windows-msvc
+# Build for Apple Silicon (M1/M2/M3)
+npm run tauri:build
+# Output: src-tauri/target/release/bundle/dmg/Amsterdam Bike Fleet_*_aarch64.dmg
 
-# Build
-npm run tauri:build:windows
+# Build for Intel Macs
+rustup target add x86_64-apple-darwin
+cargo tauri build --target x86_64-apple-darwin
+# Output: src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/*.dmg
 ```
 
-**Note:** Cross-compilation to Windows requires additional setup. For reliable Windows builds, use a Windows machine or CI/CD.
+#### Build for Windows
+
+Cross-compiling to Windows from macOS/Linux is complex because Windows bundlers (MSI, NSIS) require Windows-specific tools. **Recommended approaches:**
+
+**Option 1: GitHub Actions (Recommended for CI/CD)**
+
+Push to GitHub and the included workflow (`.github/workflows/build.yml`) will automatically build for Windows:
+
+```bash
+git push origin main
+# Check Actions tab for Windows build artifacts
+```
+
+**Option 2: Build on Windows Machine**
+
+```bash
+# On Windows with Visual Studio Build Tools installed
+npm run tauri:build
+# Output: src-tauri/target/release/bundle/msi/*.msi
+# Output: src-tauri/target/release/bundle/nsis/*.exe
+```
+
+**Option 3: Docker with Wine (Experimental)**
+
+```bash
+# Not officially supported, may have issues with bundlers
+docker run --rm -v $(pwd):/app -w /app rustcross/windows:latest cargo tauri build --target x86_64-pc-windows-msvc
+```
+
+### GitHub Actions Automated Builds
+
+The project includes a GitHub Actions workflow that builds for all platforms:
+
+- **macOS (Apple Silicon)** - `.dmg` installer
+- **macOS (Intel x64)** - `.dmg` installer
+- **Windows (x64)** - `.msi` and `.exe` installers
+
+To trigger a release build, create a version tag:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+Build artifacts will be available in:
+1. GitHub Actions → Workflow runs → Artifacts
+2. GitHub Releases (for tagged versions)
 
 ## Using the Rust Backend from Angular
 
