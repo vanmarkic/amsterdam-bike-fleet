@@ -1,0 +1,16 @@
+# Build artifacts
+/target/
+/pkg/
+/pkg-web/
+
+# Cargo lock (optional - include if you want reproducible builds)
+# Cargo.lock
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store

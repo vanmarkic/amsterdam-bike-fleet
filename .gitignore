@@ -47,6 +47,17 @@ Thumbs.db
 /src-tauri/WixTools/
 /src-tauri/.cargo/
 
+# WASM
+/wasm-lib/target/
+/wasm-lib/pkg/*.wasm
+/wasm-lib/pkg/*_bg.js
+/wasm-lib/pkg/*_bg.wasm.d.ts
+/wasm-lib/pkg-web/
+# Keep stub files for development without WASM built
+!/wasm-lib/pkg/package.json
+!/wasm-lib/pkg/amsterdam_bike_fleet_wasm.js
+!/wasm-lib/pkg/amsterdam_bike_fleet_wasm.d.ts
+
 # Playwright
 /test-results/
 /playwright-report/

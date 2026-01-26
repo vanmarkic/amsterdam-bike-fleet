@@ -24,7 +24,10 @@
       "dom"
     ],
     "types": ["node"],
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "paths": {
+      "@wasm/amsterdam_bike_fleet_wasm": ["wasm-lib/pkg/amsterdam_bike_fleet_wasm"]
+    }
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
