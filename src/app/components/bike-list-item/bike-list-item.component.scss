@@ -1,0 +1,94 @@
+.bike-item {
+  padding: 12px;
+  margin-bottom: 4px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  &.selected {
+    background: rgba(255, 255, 255, 0.12);
+    border-left-color: white;
+  }
+
+  &.delivering {
+    border-left-color: rgb(46, 204, 113);
+
+    .bike-status {
+      color: rgb(46, 204, 113);
+    }
+  }
+
+  &.returning {
+    border-left-color: rgb(52, 152, 219);
+
+    .bike-status {
+      color: rgb(52, 152, 219);
+    }
+  }
+
+  &.idle {
+    border-left-color: rgb(149, 165, 166);
+
+    .bike-status {
+      color: rgb(149, 165, 166);
+    }
+  }
+
+  .bike-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .bike-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: white;
+  }
+
+  .bike-status {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+  }
+
+  .bike-details {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+
+    .detail-label {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .detail-value {
+      font-size: 13px;
+      font-weight: 500;
+      color: white;
+
+      &.coordinates {
+        font-family: monospace;
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.7);
+      }
+    }
+  }
+}

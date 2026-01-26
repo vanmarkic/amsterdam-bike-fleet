@@ -1,0 +1,23 @@
+<div class="fleet-map-container">
+  <!-- Bike list side panel -->
+  <app-bike-list-panel
+    [bikes]="fleetData?.bikes || []"
+    [selectedBikeId]="selectedBikeId"
+    (bikeSelected)="selectBike($event)">
+  </app-bike-list-panel>
+
+  <!-- Map container -->
+  <div class="map-wrapper">
+    <div #mapContainer class="map"></div>
+
+    <!-- Stats panel -->
+    <app-stats-panel
+      [bikeCount]="bikeCount"
+      [deliveringCount]="deliveringCount"
+      [lastUpdate]="lastUpdate">
+    </app-stats-panel>
+
+    <!-- Legend -->
+    <app-legend></app-legend>
+  </div>
+</div>

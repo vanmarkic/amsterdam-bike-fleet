@@ -1,0 +1,27 @@
+<div
+  class="bike-item"
+  [class.selected]="isSelected"
+  [class.delivering]="bike.status === 'delivering'"
+  [class.returning]="bike.status === 'returning'"
+  [class.idle]="bike.status === 'idle'"
+  (click)="onSelect()">
+
+  <div class="bike-header">
+    <span class="bike-name">{{ bike.name }}</span>
+    <span class="bike-status">{{ bike.status }}</span>
+  </div>
+
+  <!-- Expanded details when selected -->
+  <div class="bike-details" *ngIf="isSelected">
+    <div class="detail-row">
+      <span class="detail-label">Speed</span>
+      <span class="detail-value">{{ bike.speed }} km/h</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Position</span>
+      <span class="detail-value coordinates">
+        {{ bike.latitude.toFixed(4) }}, {{ bike.longitude.toFixed(4) }}
+      </span>
+    </div>
+  </div>
+</div>

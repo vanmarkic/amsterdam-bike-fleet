@@ -1,0 +1,108 @@
+.legend {
+  position: absolute;
+  bottom: 30px;
+  left: 20px;
+  background: rgba(30, 30, 30, 0.9);
+  border-radius: 12px;
+  padding: 16px;
+  color: white;
+  min-width: 150px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+
+  h3 {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .legend-section {
+    margin-bottom: 16px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    h4 {
+      margin: 0 0 8px 0;
+      font-size: 12px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.5);
+    }
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+    font-size: 13px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  // Dot indicators for bikes
+  .dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+
+    &.delivering {
+      background-color: rgb(46, 204, 113);
+    }
+
+    &.returning {
+      background-color: rgb(52, 152, 219);
+    }
+
+    &.idle {
+      background-color: rgb(149, 165, 166);
+    }
+  }
+
+  // Box indicators for zones
+  .box {
+    width: 16px;
+    height: 12px;
+    border-radius: 2px;
+
+    &.pollution-high {
+      background-color: rgba(231, 76, 60, 0.7);
+      border: 1px solid rgb(231, 76, 60);
+    }
+
+    &.pollution-moderate {
+      background-color: rgba(241, 196, 15, 0.6);
+      border: 1px solid rgb(241, 196, 15);
+    }
+
+    &.traffic-heavy {
+      background-color: rgba(192, 57, 43, 0.7);
+      border: 1px solid rgb(192, 57, 43);
+    }
+
+    &.traffic-moderate {
+      background-color: rgba(230, 126, 34, 0.6);
+      border: 1px solid rgb(230, 126, 34);
+    }
+
+    &.traffic-light {
+      background-color: rgba(241, 196, 15, 0.5);
+      border: 1px solid rgb(241, 196, 15);
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .legend {
+    bottom: 10px;
+    left: 10px;
+    padding: 12px;
+    min-width: 120px;
+  }
+}

@@ -1,0 +1,18 @@
+<div class="stats-panel">
+  <h2>Amsterdam Bike Fleet</h2>
+
+  <div class="stat-item">
+    <span class="stat-label">Total Bikes</span>
+    <span class="stat-value">{{ bikeCount }}</span>
+  </div>
+
+  <div class="stat-item">
+    <span class="stat-label">Delivering</span>
+    <span class="stat-value delivering">{{ deliveringCount }}</span>
+  </div>
+
+  <div class="stat-item">
+    <span class="stat-label">Last Update</span>
+    <span class="stat-value time">{{ lastUpdate | date:'HH:mm:ss' }}</span>
+  </div>
+</div>

@@ -1,0 +1,19 @@
+.fleet-map-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+}
+
+// Map wrapper to contain map and overlays
+.map-wrapper {
+  flex: 1;
+  position: relative;
+  height: 100%;
+}
+
+.map {
+  width: 100%;
+  height: 100%;
+}

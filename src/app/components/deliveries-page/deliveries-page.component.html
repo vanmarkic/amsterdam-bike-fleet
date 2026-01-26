@@ -1,0 +1,150 @@
+<div class="deliveries-page">
+  <!-- Left Panel: List -->
+  <div class="list-panel">
+    <div class="panel-header">
+      <h2>Deliveries</h2>
+      <div class="filter-section">
+        <label for="status-filter">Status:</label>
+        <select
+          id="status-filter"
+          [value]="selectedStatus"
+          (change)="onStatusFilterChange($any($event.target).value)"
+        >
+          <option *ngFor="let option of statusOptions" [value]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <div class="list-content">
+      <div *ngIf="loading" class="loading-state">
+        <span class="spinner"></span>
+        <span>Loading deliveries...</span>
+      </div>
+
+      <div *ngIf="error && !loading" class="error-state">
+        <span class="error-icon">!</span>
+        <span>{{ error }}</span>
+        <button class="retry-btn" (click)="loadDeliveries()">Retry</button>
+      </div>
+
+      <div
+        *ngIf="!loading && !error && filteredDeliveries.length === 0"
+        class="empty-state"
+      >
+        No deliveries found.
+      </div>
+
+      <ul *ngIf="!loading && !error && filteredDeliveries.length > 0" class="delivery-list">
+        <li
+          *ngFor="let delivery of filteredDeliveries; trackBy: trackByDeliveryId"
+          class="delivery-item"
+          [class.selected]="selectedDelivery?.id === delivery.id"
+          (click)="selectDelivery(delivery)"
+        >
+          <div class="delivery-info">
+            <span class="restaurant-name">{{ delivery.restaurantName }}</span>
+            <span class="customer-name">{{ delivery.customerName }}</span>
+          </div>
+          <span
+            class="status-badge"
+            [class.completed]="delivery.status === 'completed'"
+            [class.ongoing]="delivery.status === 'ongoing'"
+            [class.upcoming]="delivery.status === 'upcoming'"
+          >
+            {{ delivery.status }}
+          </span>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Right Panel: Detail -->
+  <div class="detail-panel">
+    <div *ngIf="!selectedDelivery" class="no-selection">
+      <span class="placeholder-icon">&#128666;</span>
+      <span class="placeholder-text">Select a delivery to view details</span>
+    </div>
+
+    <div *ngIf="selectedDelivery" class="delivery-detail">
+      <div class="detail-header">
+        <h2>Delivery Details</h2>
+        <span
+          class="status-badge large"
+          [class.completed]="selectedDelivery.status === 'completed'"
+          [class.ongoing]="selectedDelivery.status === 'ongoing'"
+          [class.upcoming]="selectedDelivery.status === 'upcoming'"
+        >
+          {{ selectedDelivery.status }}
+        </span>
+      </div>
+
+      <div class="detail-content">
+        <div class="detail-section">
+          <h3>Identifiers</h3>
+          <div class="detail-row">
+            <span class="label">Delivery ID</span>
+            <span class="value">{{ selectedDelivery.id }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Bike ID</span>
+            <span class="value">{{ selectedDelivery.bikeId }}</span>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Restaurant</h3>
+          <div class="detail-row">
+            <span class="label">Name</span>
+            <span class="value">{{ selectedDelivery.restaurantName }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Address</span>
+            <span class="value">{{ selectedDelivery.restaurantAddress }}</span>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Customer</h3>
+          <div class="detail-row">
+            <span class="label">Name</span>
+            <span class="value">{{ selectedDelivery.customerName }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Address</span>
+            <span class="value">{{ selectedDelivery.customerAddress }}</span>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Timestamps</h3>
+          <div class="detail-row">
+            <span class="label">Created</span>
+            <span class="value">{{ formatDate(selectedDelivery.createdAt) }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Completed</span>
+            <span class="value">{{ formatDate(selectedDelivery.completedAt) }}</span>
+          </div>
+        </div>
+
+        <div class="detail-section" *ngIf="selectedDelivery.status === 'completed'">
+          <h3>Feedback</h3>
+          <div class="detail-row" *ngIf="selectedDelivery.rating !== null">
+            <span class="label">Rating</span>
+            <span class="value rating">{{ getStars(selectedDelivery.rating) }}</span>
+          </div>
+          <div class="detail-row" *ngIf="selectedDelivery.rating === null">
+            <span class="label">Rating</span>
+            <span class="value muted">No rating provided</span>
+          </div>
+          <div class="detail-row" *ngIf="selectedDelivery.complaint">
+            <span class="label">Complaint</span>
+            <span class="value complaint">{{ selectedDelivery.complaint }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
