@@ -1,6 +1,6 @@
 use crate::models::{Bike, BikeStatus, DatabaseStats};
 use chrono::Utc;
-use rusqlite::{Connection, Result as SqliteResult};
+use rusqlite::{Connection, OptionalExtension, Result as SqliteResult};
 use std::path::PathBuf;
 use thiserror::Error;
 
@@ -251,35 +251,33 @@ impl Database {
     ) -> Result<(), DatabaseError> {
         let now = Utc::now().to_rfc3339();
 
-        // Build dynamic update query
-        let mut updates = vec!["status = ?1", "updated_at = ?2"];
-        let mut params: Vec<Box<dyn rusqlite::ToSql>> = vec![
-            Box::new(status.as_str().to_string()),
-            Box::new(now),
-        ];
-
-        if let Some(lat_val) = lat {
-            updates.push("latitude = ?3");
-            params.push(Box::new(lat_val));
+        // Build update based on provided values
+        match (lat, lon, battery) {
+            (Some(lat_val), Some(lon_val), Some(bat_val)) => {
+                self.conn.execute(
+                    "UPDATE bikes SET status = ?1, updated_at = ?2, latitude = ?3, longitude = ?4, battery_level = ?5 WHERE id = ?6",
+                    rusqlite::params![status.as_str(), now, lat_val, lon_val, bat_val as i32, bike_id],
+                )?;
+            }
+            (Some(lat_val), Some(lon_val), None) => {
+                self.conn.execute(
+                    "UPDATE bikes SET status = ?1, updated_at = ?2, latitude = ?3, longitude = ?4 WHERE id = ?5",
+                    rusqlite::params![status.as_str(), now, lat_val, lon_val, bike_id],
+                )?;
+            }
+            (None, None, Some(bat_val)) => {
+                self.conn.execute(
+                    "UPDATE bikes SET status = ?1, updated_at = ?2, battery_level = ?3 WHERE id = ?4",
+                    rusqlite::params![status.as_str(), now, bat_val as i32, bike_id],
+                )?;
+            }
+            _ => {
+                self.conn.execute(
+                    "UPDATE bikes SET status = ?1, updated_at = ?2 WHERE id = ?3",
+                    rusqlite::params![status.as_str(), now, bike_id],
+                )?;
+            }
         }
-        if let Some(lon_val) = lon {
-            let idx = params.len() + 1;
-            updates.push(&format!("longitude = ?{}", idx).leak());
-            params.push(Box::new(lon_val));
-        }
-        if let Some(bat_val) = battery {
-            let idx = params.len() + 1;
-            updates.push(&format!("battery_level = ?{}", idx).leak());
-            params.push(Box::new(bat_val as i32));
-        }
-
-        // For simplicity, just update status and timestamp
-        self.conn.execute(
-            &format!(
-                "UPDATE bikes SET status = ?1, updated_at = ?2 WHERE id = ?3"
-            ),
-            rusqlite::params![status.as_str(), Utc::now().to_rfc3339(), bike_id],
-        )?;
 
         Ok(())
     }
