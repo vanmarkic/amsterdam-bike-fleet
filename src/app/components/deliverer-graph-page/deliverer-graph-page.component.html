@@ -1,0 +1,98 @@
+<!--
+  Deliverer Graph Page
+
+  Layout:
+  - Header with title and deliverer selector
+  - Main area with force graph
+  - Side panel with selected node details
+-->
+
+<div class="graph-page">
+  <!-- Header -->
+  <header class="page-header">
+    <h1>Deliverer Relationship Graph</h1>
+
+    <div class="controls">
+      <!-- Deliverer Selector -->
+      <div class="selector">
+        <label for="bike-select">Select Deliverer:</label>
+        <select
+          id="bike-select"
+          [value]="selectedBikeId || ''"
+          (change)="onBikeSelect($event)"
+          [disabled]="loading"
+        >
+          <option value="">-- Select --</option>
+          <option
+            *ngFor="let bike of bikes"
+            [value]="bike.id"
+          >
+            {{ getBikeName(bike) }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Refresh button -->
+      <button
+        class="refresh-btn"
+        (click)="loadFleetData()"
+        [disabled]="loading"
+        title="Refresh fleet data"
+      >
+        ↻
+      </button>
+    </div>
+  </header>
+
+  <!-- Loading state -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <span>Loading fleet data...</span>
+  </div>
+
+  <!-- Error state -->
+  <div *ngIf="error && !loading" class="error-state">
+    <span class="error-icon">⚠</span>
+    <span>{{ error }}</span>
+    <button (click)="loadFleetData()">Retry</button>
+  </div>
+
+  <!-- Main content -->
+  <main *ngIf="!loading && !error" class="main-content">
+    <!-- Force Graph -->
+    <div class="graph-area">
+      <app-force-graph
+        [bikeId]="selectedBikeId"
+        [width]="800"
+        [height]="600"
+        (nodeClick)="onNodeClick($event)"
+        (nodeDblClick)="onNodeDblClick($event)"
+      ></app-force-graph>
+    </div>
+
+    <!-- Details Panel -->
+    <aside class="details-panel" *ngIf="selectedNode">
+      <div class="panel-header">
+        <h2>{{ selectedNode.label }}</h2>
+        <button class="close-btn" (click)="clearSelection()" title="Close">×</button>
+      </div>
+
+      <div class="panel-content">
+        <table class="details-table">
+          <tr *ngFor="let detail of getNodeDetails()">
+            <th>{{ detail.label }}</th>
+            <td>{{ detail.value }}</td>
+          </tr>
+        </table>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Instructions -->
+  <footer class="page-footer" *ngIf="!loading && !error">
+    <p>
+      <strong>Tip:</strong> Drag nodes to rearrange. Click a node to see details.
+      Double-click for more options.
+    </p>
+  </footer>
+</div>

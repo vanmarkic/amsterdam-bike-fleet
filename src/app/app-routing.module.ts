@@ -21,6 +21,12 @@ const routes: Routes = [
     loadComponent: () => import('./components/license-dialog/license-dialog.component')
       .then(m => m.LicenseDialogComponent)
   },
+  // Force graph visualization for deliverer relationships
+  {
+    path: 'graph',
+    loadComponent: () => import('./components/deliverer-graph-page/deliverer-graph-page.component')
+      .then(m => m.DelivererGraphPageComponent)
+  },
 ];
 
 @NgModule({

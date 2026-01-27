@@ -1,0 +1,290 @@
+/**
+ * Force Graph Component Styles
+ *
+ * Design principles:
+ * - Dark theme matching the fleet map
+ * - Clear visual hierarchy (deliverer > deliveries > issues)
+ * - Interactive feedback (hover, drag states)
+ * - Accessible color contrasts
+ */
+
+.force-graph-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+// ============================================
+// Loading State
+// ============================================
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(26, 26, 46, 0.9);
+  color: #a0a0a0;
+  gap: 12px;
+  z-index: 10;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #333;
+  border-top-color: #4CAF50;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// ============================================
+// Error State
+// ============================================
+
+.error-message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: #f44336;
+  text-align: center;
+
+  .error-icon {
+    font-size: 32px;
+  }
+
+  button {
+    padding: 8px 16px;
+    background: #333;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s;
+
+    &:hover {
+      background: #444;
+    }
+  }
+}
+
+// ============================================
+// Empty State
+// ============================================
+
+.empty-state {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: #666;
+  text-align: center;
+
+  .empty-icon {
+    font-size: 48px;
+    opacity: 0.5;
+  }
+}
+
+// ============================================
+// SVG Graph
+// ============================================
+
+.force-graph-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+// Links
+.links-layer {
+  .link {
+    stroke: #444;
+    stroke-opacity: 0.6;
+    fill: none;
+
+    &.link-delivery {
+      stroke: #4CAF50;
+      stroke-opacity: 0.4;
+    }
+
+    &.link-issue {
+      stroke: #F44336;
+      stroke-opacity: 0.3;
+      stroke-dasharray: 4 2;
+    }
+  }
+}
+
+// Nodes
+.nodes-layer {
+  .node {
+    cursor: grab;
+    transition: filter 0.2s;
+
+    &:hover {
+      filter: url(#glow) brightness(1.2);
+    }
+
+    &:active {
+      cursor: grabbing;
+    }
+
+    circle {
+      transition: r 0.2s, fill 0.2s;
+    }
+
+    &:hover circle {
+      stroke: #fff;
+      stroke-width: 2px;
+    }
+  }
+
+  // Node type styles
+  .node-deliverer {
+    circle {
+      filter: url(#shadow);
+    }
+  }
+
+  .node-delivery {
+    &.status-completed circle {
+      fill: #4CAF50;
+    }
+    &.status-ongoing circle {
+      fill: #FF9800;
+    }
+    &.status-upcoming circle {
+      fill: #2196F3;
+    }
+  }
+
+  .node-issue {
+    &.node-resolved circle {
+      fill: #9E9E9E;
+    }
+  }
+
+  // Labels
+  .node-label {
+    font-family: 'Segoe UI', Roboto, sans-serif;
+    font-size: 11px;
+    fill: #ccc;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+    pointer-events: none;
+    user-select: none;
+  }
+}
+
+// ============================================
+// Legend
+// ============================================
+
+.legend {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 8px;
+  padding: 12px;
+  color: #fff;
+  font-size: 12px;
+  backdrop-filter: blur(4px);
+}
+
+.legend-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #aaa;
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+}
+
+.legend-items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+
+  &.deliverer {
+    background: #4CAF50;
+    border: 2px solid #fff;
+  }
+
+  &.delivery-completed {
+    background: #4CAF50;
+  }
+
+  &.delivery-ongoing {
+    background: #FF9800;
+  }
+
+  &.delivery-upcoming {
+    background: #2196F3;
+  }
+
+  &.issue {
+    background: #F44336;
+  }
+
+  &.issue-resolved {
+    background: #9E9E9E;
+  }
+}
+
+// ============================================
+// Responsive Adjustments
+// ============================================
+
+@media (max-width: 600px) {
+  .legend {
+    bottom: 8px;
+    right: 8px;
+    padding: 8px;
+    font-size: 10px;
+  }
+
+  .legend-items {
+    gap: 4px;
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+  }
+}

@@ -15,7 +15,8 @@ export class NavTabsComponent {
   readonly tabs: NavTab[] = [
     { label: 'Map', route: '/map' },
     { label: 'Deliveries', route: '/deliveries' },
-    { label: 'Issues', route: '/issues' }
+    { label: 'Issues', route: '/issues' },
+    { label: 'Graph', route: '/graph' }
   ];
 
   showLicenseDialog = false;
