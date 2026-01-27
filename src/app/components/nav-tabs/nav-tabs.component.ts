@@ -17,4 +17,10 @@ export class NavTabsComponent {
     { label: 'Deliveries', route: '/deliveries' },
     { label: 'Issues', route: '/issues' }
   ];
+
+  showLicenseDialog = false;
+
+  openLicenseDialog(): void {
+    this.showLicenseDialog = true;
+  }
 }

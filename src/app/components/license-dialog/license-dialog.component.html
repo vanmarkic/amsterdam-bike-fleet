@@ -1,0 +1,212 @@
+<!-- Modal backdrop (only shown when isModal is true and isOpen is true) -->
+<div
+  *ngIf="isModal && isOpen"
+  class="modal-backdrop"
+  (click)="onBackdropClick($event)"
+  (keydown)="onKeyDown($event)"
+  tabindex="0"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="license-dialog-title">
+
+  <div class="dialog-container" role="document">
+    <!-- Close button -->
+    <button
+      class="close-button"
+      (click)="closeModal()"
+      aria-label="Close dialog"
+      type="button">
+      &times;
+    </button>
+
+    <ng-container *ngTemplateOutlet="dialogContent"></ng-container>
+  </div>
+</div>
+
+<!-- Standalone page content (when isModal is false) -->
+<div *ngIf="!isModal" class="standalone-container">
+  <ng-container *ngTemplateOutlet="dialogContent"></ng-container>
+</div>
+
+<!-- Shared dialog content template -->
+<ng-template #dialogContent>
+  <div class="license-dialog">
+    <h2 id="license-dialog-title" class="dialog-title">License Management</h2>
+
+    <!-- Browser mode warning -->
+    <div *ngIf="!isTauriEnvironment" class="warning-banner">
+      <span class="warning-icon">!</span>
+      <span>Running in browser mode. License features require the desktop app.</span>
+    </div>
+
+    <!-- Current License Status Section -->
+    <section class="section license-status-section">
+      <h3 class="section-title">Current License Status</h3>
+
+      <div class="status-header">
+        <span class="status-badge" [ngClass]="getStatusBadgeClass()">
+          {{ getStatusText() }}
+        </span>
+        <button
+          class="refresh-button"
+          (click)="refreshStatus()"
+          [disabled]="loading"
+          type="button"
+          aria-label="Refresh license status">
+          <span [class.spinning]="loading">&#8635;</span>
+        </button>
+      </div>
+
+      <!-- License Info (when licensed) -->
+      <div *ngIf="licenseInfo" class="license-info">
+        <div class="info-row">
+          <span class="info-label">Customer:</span>
+          <span class="info-value">{{ licenseInfo.customer }}</span>
+        </div>
+
+        <div *ngIf="licenseInfo.company" class="info-row">
+          <span class="info-label">Company:</span>
+          <span class="info-value">{{ licenseInfo.company }}</span>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label">Product:</span>
+          <span class="info-value">{{ licenseInfo.product }}</span>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label">Expires:</span>
+          <span class="info-value" [class.expiring-soon]="isExpiringSoon" [class.expired]="isExpired">
+            {{ formatDate(licenseInfo.expires) }}
+            <span *ngIf="daysRemaining !== null" class="days-remaining">
+              ({{ daysRemaining > 0 ? daysRemaining + ' days left' : 'Expired' }})
+            </span>
+          </span>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label">Features:</span>
+          <span class="info-value features">{{ formatFeatures(licenseInfo.features) }}</span>
+        </div>
+
+        <div *ngIf="licenseInfo.seats" class="info-row">
+          <span class="info-label">Seats:</span>
+          <span class="info-value">{{ licenseInfo.seats }}</span>
+        </div>
+
+        <div *ngIf="licenseInfo.issued" class="info-row">
+          <span class="info-label">Issued:</span>
+          <span class="info-value">{{ formatDate(licenseInfo.issued) }}</span>
+        </div>
+      </div>
+
+      <!-- No License Message -->
+      <div *ngIf="!licenseInfo && !loading" class="no-license-message">
+        <p>No active license found. Enter a license key below to activate.</p>
+      </div>
+    </section>
+
+    <!-- License Activation Section -->
+    <section class="section activation-section">
+      <h3 class="section-title">{{ isLicensed ? 'Update License' : 'Activate License' }}</h3>
+
+      <div class="input-group">
+        <label for="license-key-input" class="input-label">License Key</label>
+        <input
+          id="license-key-input"
+          type="text"
+          class="license-input"
+          [(ngModel)]="licenseKey"
+          placeholder="Enter your license key"
+          [disabled]="loading || isValidating || !isTauriEnvironment"
+          (input)="clearMessages()"
+          autocomplete="off"
+          spellcheck="false" />
+      </div>
+
+      <!-- Validation Preview -->
+      <div *ngIf="validationResult" class="validation-preview">
+        <h4 class="preview-title">License Preview</h4>
+        <div *ngIf="validationResult.valid" class="preview-valid">
+          <div class="info-row">
+            <span class="info-label">Customer:</span>
+            <span class="info-value">{{ validationResult.info?.customer }}</span>
+          </div>
+          <div *ngIf="validationResult.info?.company" class="info-row">
+            <span class="info-label">Company:</span>
+            <span class="info-value">{{ validationResult.info?.company }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Expires:</span>
+            <span class="info-value">{{ formatDate(validationResult.info?.expires) }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Features:</span>
+            <span class="info-value">{{ formatFeatures(validationResult.info?.features || []) }}</span>
+          </div>
+        </div>
+        <div *ngIf="!validationResult.valid" class="preview-invalid">
+          <span class="error-icon">&#10006;</span>
+          <span>{{ validationResult.error || 'Invalid license key' }}</span>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="button-group">
+        <button
+          class="btn btn-secondary"
+          (click)="validateKey()"
+          [disabled]="!licenseKey.trim() || loading || isValidating || !isTauriEnvironment"
+          type="button">
+          <span *ngIf="isValidating" class="btn-spinner"></span>
+          {{ isValidating ? 'Validating...' : 'Validate' }}
+        </button>
+
+        <button
+          class="btn btn-primary"
+          (click)="activateLicense()"
+          [disabled]="!canActivate || !isTauriEnvironment"
+          type="button">
+          <span *ngIf="loading && !isValidating" class="btn-spinner"></span>
+          {{ loading && !isValidating ? 'Activating...' : 'Activate' }}
+        </button>
+      </div>
+    </section>
+
+    <!-- Deactivation Section (only when licensed) -->
+    <section *ngIf="isLicensed" class="section deactivation-section">
+      <h3 class="section-title">Deactivate License</h3>
+      <p class="deactivation-warning">
+        Deactivating will remove the current license from this device.
+        Premium features will no longer be available.
+      </p>
+      <button
+        class="btn btn-danger"
+        (click)="deactivateLicense()"
+        [disabled]="!canDeactivate"
+        type="button">
+        {{ loading ? 'Deactivating...' : 'Deactivate License' }}
+      </button>
+    </section>
+
+    <!-- Messages -->
+    <div class="messages">
+      <!-- Error Message -->
+      <div *ngIf="error" class="message message-error" role="alert">
+        <span class="message-icon">&#10006;</span>
+        <span>{{ error }}</span>
+      </div>
+
+      <!-- Success Messages -->
+      <div *ngIf="activationSuccess" class="message message-success" role="status">
+        <span class="message-icon">&#10004;</span>
+        <span>License activated successfully!</span>
+      </div>
+
+      <div *ngIf="deactivationSuccess" class="message message-success" role="status">
+        <span class="message-icon">&#10004;</span>
+        <span>License deactivated successfully.</span>
+      </div>
+    </div>
+  </div>
+</ng-template>

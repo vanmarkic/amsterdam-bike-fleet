@@ -1,0 +1,551 @@
+// License Dialog Component Styles
+// Follows the project's dark theme aesthetic
+
+// Variables
+$bg-dark: rgba(30, 30, 30, 0.95);
+$bg-section: rgba(40, 40, 40, 0.8);
+$text-primary: #ffffff;
+$text-secondary: rgba(255, 255, 255, 0.7);
+$text-muted: rgba(255, 255, 255, 0.5);
+$border-color: rgba(255, 255, 255, 0.1);
+
+$color-primary: #3498db;
+$color-primary-hover: #2980b9;
+$color-success: #2ecc71;
+$color-warning: #f39c12;
+$color-danger: #e74c3c;
+$color-danger-hover: #c0392b;
+
+$border-radius: 12px;
+$border-radius-sm: 8px;
+$transition-speed: 0.2s;
+
+// Modal Backdrop
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  box-sizing: border-box;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+// Dialog Container
+.dialog-container {
+  position: relative;
+  background: $bg-dark;
+  border-radius: $border-radius;
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+// Standalone Container
+.standalone-container {
+  max-width: 600px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+// Close Button
+.close-button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: $text-secondary;
+  font-size: 24px;
+  line-height: 1;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all $transition-speed ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: $text-primary;
+  }
+
+  &:focus {
+    outline: 2px solid $color-primary;
+    outline-offset: 2px;
+  }
+}
+
+// Main Dialog
+.license-dialog {
+  padding: 24px;
+  color: $text-primary;
+}
+
+.dialog-title {
+  margin: 0 0 20px 0;
+  font-size: 24px;
+  font-weight: 600;
+  padding-bottom: 16px;
+  border-bottom: 1px solid $border-color;
+}
+
+// Warning Banner
+.warning-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: rgba($color-warning, 0.15);
+  border: 1px solid rgba($color-warning, 0.3);
+  border-radius: $border-radius-sm;
+  margin-bottom: 20px;
+  color: $color-warning;
+  font-size: 14px;
+
+  .warning-icon {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: $color-warning;
+    color: #000;
+    border-radius: 50%;
+    font-weight: bold;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+}
+
+// Sections
+.section {
+  background: $bg-section;
+  border-radius: $border-radius-sm;
+  padding: 16px;
+  margin-bottom: 16px;
+
+  &:last-of-type {
+    margin-bottom: 0;
+  }
+}
+
+.section-title {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: $text-primary;
+}
+
+// Status Header
+.status-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  &.badge-valid {
+    background: rgba($color-success, 0.2);
+    color: $color-success;
+  }
+
+  &.badge-warning {
+    background: rgba($color-warning, 0.2);
+    color: $color-warning;
+  }
+
+  &.badge-expired,
+  &.badge-invalid {
+    background: rgba($color-danger, 0.2);
+    color: $color-danger;
+  }
+
+  &.badge-unknown {
+    background: rgba(128, 128, 128, 0.2);
+    color: $text-muted;
+  }
+}
+
+.refresh-button {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: $text-secondary;
+  font-size: 18px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all $transition-speed ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.2);
+    color: $text-primary;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .spinning {
+    animation: spin 1s linear infinite;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// License Info
+.license-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.info-label {
+  color: $text-secondary;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.info-value {
+  font-size: 14px;
+  text-align: right;
+  word-break: break-word;
+
+  &.features {
+    color: $color-primary;
+  }
+
+  &.expiring-soon {
+    color: $color-warning;
+  }
+
+  &.expired {
+    color: $color-danger;
+  }
+
+  .days-remaining {
+    font-size: 12px;
+    color: $text-muted;
+    margin-left: 4px;
+  }
+}
+
+.no-license-message {
+  color: $text-secondary;
+  font-size: 14px;
+  text-align: center;
+  padding: 12px;
+
+  p {
+    margin: 0;
+  }
+}
+
+// Input Group
+.input-group {
+  margin-bottom: 16px;
+}
+
+.input-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: $text-secondary;
+}
+
+.license-input {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-family: monospace;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid $border-color;
+  border-radius: $border-radius-sm;
+  color: $text-primary;
+  box-sizing: border-box;
+  transition: border-color $transition-speed ease;
+
+  &::placeholder {
+    color: $text-muted;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: $color-primary;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// Validation Preview
+.validation-preview {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: $border-radius-sm;
+}
+
+.preview-title {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: $text-secondary;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.preview-valid {
+  .info-row {
+    font-size: 13px;
+  }
+}
+
+.preview-invalid {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: $color-danger;
+  font-size: 14px;
+
+  .error-icon {
+    font-size: 16px;
+  }
+}
+
+// Button Group
+.button-group {
+  display: flex;
+  gap: 12px;
+}
+
+// Buttons
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  border-radius: $border-radius-sm;
+  cursor: pointer;
+  transition: all $transition-speed ease;
+  flex: 1;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &:focus {
+    outline: 2px solid rgba(255, 255, 255, 0.5);
+    outline-offset: 2px;
+  }
+}
+
+.btn-primary {
+  background: $color-primary;
+  color: $text-primary;
+
+  &:hover:not(:disabled) {
+    background: $color-primary-hover;
+  }
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: $text-primary;
+
+  &:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.2);
+  }
+}
+
+.btn-danger {
+  background: $color-danger;
+  color: $text-primary;
+
+  &:hover:not(:disabled) {
+    background: $color-danger-hover;
+  }
+}
+
+.btn-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: $text-primary;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+// Deactivation Section
+.deactivation-section {
+  border: 1px solid rgba($color-danger, 0.3);
+}
+
+.deactivation-warning {
+  margin: 0 0 12px 0;
+  font-size: 13px;
+  color: $text-secondary;
+  line-height: 1.5;
+}
+
+// Messages
+.messages {
+  margin-top: 16px;
+}
+
+.message {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: $border-radius-sm;
+  font-size: 14px;
+  margin-bottom: 8px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.message-error {
+  background: rgba($color-danger, 0.15);
+  border: 1px solid rgba($color-danger, 0.3);
+  color: $color-danger;
+}
+
+.message-success {
+  background: rgba($color-success, 0.15);
+  border: 1px solid rgba($color-success, 0.3);
+  color: $color-success;
+}
+
+.message-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+// Responsive Styles
+@media (max-width: 480px) {
+  .modal-backdrop {
+    padding: 10px;
+  }
+
+  .dialog-container {
+    max-height: 95vh;
+  }
+
+  .license-dialog {
+    padding: 16px;
+  }
+
+  .dialog-title {
+    font-size: 20px;
+  }
+
+  .button-group {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+  }
+
+  .info-row {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .info-value {
+    text-align: left;
+  }
+}
+
+// Scrollbar styling for the dialog
+.dialog-container {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+  }
+}

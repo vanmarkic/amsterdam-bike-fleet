@@ -305,11 +305,375 @@ license.isExpired$        // Observable<boolean> - true if expired
 
 ### Phase 2: Domain Verification (TODO)
 
-- [ ] Extend `LicenseInfo` to include `domains: Vec<String>`
-- [ ] Add WebView URL interception in Rust
-- [ ] Verify URL host against licensed domains
-- [ ] Block unauthorized origins with error UI
-- [ ] Update license generator to include domains
+Domain verification ties licenses to specific customer server domains, preventing license sharing across organizations.
+
+#### Overview
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                     DOMAIN VERIFICATION FLOW                             │
+│                                                                          │
+│  ┌──────────────┐     ┌──────────────┐     ┌──────────────────────────┐ │
+│  │   License    │     │   WebView    │     │   Rust Domain Checker    │ │
+│  │   (stored)   │     │   (Angular)  │     │   (navigation handler)   │ │
+│  └──────┬───────┘     └──────┬───────┘     └──────────────┬───────────┘ │
+│         │                    │                            │              │
+│         │  domains: [        │                            │              │
+│         │    "fleet.acme.com"│                            │              │
+│         │    "localhost"     │                            │              │
+│         │  ]                 │                            │              │
+│         │                    │                            │              │
+│         │                    │  1. Navigate to URL        │              │
+│         │                    │─────────────────────────►  │              │
+│         │                    │                            │              │
+│         │  2. Get domains    │                            │              │
+│         │◄────────────────────────────────────────────────│              │
+│         │                    │                            │              │
+│         │                    │  3. Check: URL host        │              │
+│         │                    │     in domains[]?          │              │
+│         │                    │                            │              │
+│         │                    │  4a. YES → Allow           │              │
+│         │                    │◄───────────────────────────│              │
+│         │                    │                            │              │
+│         │                    │  4b. NO → Block + Error    │              │
+│         │                    │◄───────────────────────────│              │
+│  └──────┴───────────────────┴────────────────────────────┴──────────────┘│
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+#### Why Domain Verification?
+
+| Scenario | Without Domain Lock | With Domain Lock |
+|----------|---------------------|------------------|
+| Customer A shares license with Customer B | ⚠️ Works (traceable but usable) | ❌ Blocked - wrong domain |
+| Competitor copies license key | ⚠️ Works on their server | ❌ Blocked - domain mismatch |
+| Employee takes license to new company | ⚠️ Could use on new servers | ❌ Blocked - unauthorized domain |
+| Development/staging testing | ✅ Works | ✅ Works if `localhost` included |
+
+#### Implementation Checklist
+
+| Task | File(s) | Complexity | Description |
+|------|---------|------------|-------------|
+| 1. Extend LicenseInfo | `src-tauri/src/license.rs` | Low | Add `domains: Option<Vec<String>>` field |
+| 2. Update license generator | `license-generator/src/main.rs` | Low | Add `--domains` CLI flag |
+| 3. Add navigation handler | `src-tauri/src/lib.rs` | Medium | Intercept WebView navigation events |
+| 4. Domain matching logic | `src-tauri/src/license.rs` | Medium | Implement hostname + wildcard matching |
+| 5. Angular error handling | `src/app/services/license.service.ts` | Low | Handle domain rejection errors |
+| 6. Error UI component | `src/app/components/` | Low | Show "Unauthorized domain" message |
+
+#### 1. Extend LicenseInfo (Rust)
+
+```rust
+// src-tauri/src/license.rs
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct LicenseInfo {
+    pub customer: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub company: Option<String>,
+    pub product: String,
+    pub expires: String,
+    pub features: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub seats: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub issued: Option<String>,
+    pub version: u32,
+
+    // NEW: Phase 2 - Domain verification
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub domains: Option<Vec<String>>,
+}
+
+impl LicenseInfo {
+    /// Check if a domain is authorized by this license
+    ///
+    /// Supports:
+    /// - Exact match: "fleet.acme.com" matches "fleet.acme.com"
+    /// - Wildcard: "*.acme.com" matches "fleet.acme.com", "staging.acme.com"
+    /// - Localhost: "localhost" matches "localhost:4200", "127.0.0.1"
+    pub fn is_domain_authorized(&self, url: &str) -> bool {
+        // No domains specified = allow all (Phase 1 compatibility)
+        let domains = match &self.domains {
+            Some(d) if !d.is_empty() => d,
+            _ => return true,
+        };
+
+        // Parse the URL to extract host
+        let host = match url::Url::parse(url) {
+            Ok(parsed) => parsed.host_str().unwrap_or("").to_lowercase(),
+            Err(_) => return false,
+        };
+
+        for domain in domains {
+            let domain = domain.to_lowercase();
+
+            // Handle localhost special case
+            if domain == "localhost" {
+                if host == "localhost" || host == "127.0.0.1" || host == "::1" {
+                    return true;
+                }
+            }
+            // Handle wildcard domains (*.example.com)
+            else if domain.starts_with("*.") {
+                let suffix = &domain[1..]; // ".example.com"
+                if host.ends_with(suffix) || host == &domain[2..] {
+                    return true;
+                }
+            }
+            // Exact match
+            else if host == domain {
+                return true;
+            }
+        }
+
+        false
+    }
+}
+```
+
+#### 2. Update License Generator
+
+```rust
+// license-generator/src/main.rs
+
+#[derive(Parser, Debug)]
+struct Args {
+    // ... existing fields ...
+
+    /// Comma-separated list of authorized domains
+    /// Examples: "fleet.acme.com,staging.acme.com,localhost"
+    /// Use "*.acme.com" for wildcard subdomains
+    #[arg(long)]
+    domains: Option<String>,
+}
+
+// In generate_license():
+let domains: Option<Vec<String>> = args.domains.map(|d| {
+    d.split(',')
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+        .collect()
+});
+
+let info = LicenseInfo {
+    // ... existing fields ...
+    domains,
+};
+```
+
+**Usage:**
+
+```bash
+# Generate domain-locked license
+cargo run -- \
+  --private-key="YOUR_KEY" \
+  --customer="john@acme.com" \
+  --company="ACME Corp" \
+  --expires="2027-12-31" \
+  --features="premium,export" \
+  --domains="fleet.acme.com,staging.acme.com,localhost"
+
+# With wildcard subdomain
+cargo run -- \
+  --private-key="YOUR_KEY" \
+  --customer="enterprise@bigcorp.com" \
+  --expires="2027-12-31" \
+  --domains="*.bigcorp.com,localhost"
+```
+
+#### 3. WebView Navigation Handler (Tauri)
+
+```rust
+// src-tauri/src/lib.rs
+
+use tauri::Manager;
+use tauri::webview::PageLoadEvent;
+
+pub fn run() {
+    tauri::Builder::default()
+        .setup(|app| {
+            // Get the main window
+            let window = app.get_webview_window("main").unwrap();
+
+            // Listen for navigation events
+            window.on_page_load(|webview, payload| {
+                if let PageLoadEvent::Started = payload.event() {
+                    let url = payload.url().to_string();
+
+                    // Check domain authorization
+                    if let Err(e) = check_domain_authorization(&url) {
+                        // Block navigation and show error
+                        webview.eval(&format!(
+                            "window.__DOMAIN_ERROR__ = '{}'; \
+                             window.dispatchEvent(new CustomEvent('domain-error', {{ detail: '{}' }}));",
+                            e, e
+                        )).ok();
+
+                        // Optionally navigate to error page
+                        webview.navigate("tauri://localhost/domain-error.html".parse().unwrap()).ok();
+                    }
+                }
+            });
+
+            Ok(())
+        })
+        .invoke_handler(tauri::generate_handler![
+            // ... existing handlers ...
+        ])
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
+}
+
+fn check_domain_authorization(url: &str) -> Result<(), String> {
+    // Load stored license
+    let app_data_dir = /* get app data dir */;
+    let storage = LicenseStorage::new(app_data_dir);
+
+    if !storage.exists() {
+        return Err("No license found".to_string());
+    }
+
+    let license_key = storage.load()
+        .map_err(|e| format!("Failed to load license: {}", e))?;
+
+    let status = license::get_license_status(&license_key);
+
+    if !status.valid {
+        return Err(status.error.unwrap_or("Invalid license".to_string()));
+    }
+
+    if let Some(info) = &status.info {
+        if !info.is_domain_authorized(url) {
+            return Err(format!(
+                "Domain not authorized. URL '{}' is not in licensed domains: {:?}",
+                url,
+                info.domains
+            ));
+        }
+    }
+
+    Ok(())
+}
+```
+
+#### 4. Tauri v2 Navigation API
+
+In Tauri v2, use the `on_navigation` event:
+
+```rust
+// src-tauri/src/lib.rs
+
+use tauri::webview::WebviewBuilder;
+
+pub fn run() {
+    tauri::Builder::default()
+        .setup(|app| {
+            let handle = app.handle().clone();
+
+            // Create webview with navigation handler
+            let webview = WebviewBuilder::new("main", tauri::WebviewUrl::App("index.html".into()))
+                .on_navigation(move |url| {
+                    // Return false to block navigation, true to allow
+                    match check_domain_authorization_v2(&handle, url.as_str()) {
+                        Ok(()) => true,  // Allow
+                        Err(e) => {
+                            eprintln!("Domain blocked: {}", e);
+                            false  // Block
+                        }
+                    }
+                })
+                .build()?;
+
+            Ok(())
+        })
+        .run(tauri::generate_context!())
+}
+```
+
+#### 5. Angular Error Handling
+
+```typescript
+// src/app/services/license.service.ts
+
+// Listen for domain errors from Tauri
+if (typeof window !== 'undefined') {
+  window.addEventListener('domain-error', (event: CustomEvent) => {
+    this.domainErrorSubject.next(event.detail);
+  });
+}
+
+// Observable for domain errors
+private domainErrorSubject = new BehaviorSubject<string | null>(null);
+public domainError$ = this.domainErrorSubject.asObservable();
+```
+
+#### 6. Error UI Component
+
+```typescript
+// src/app/components/domain-error/domain-error.component.ts
+
+@Component({
+  selector: 'app-domain-error',
+  template: `
+    <div class="domain-error-overlay" *ngIf="licenseService.domainError$ | async as error">
+      <div class="domain-error-dialog">
+        <h2>⚠️ Unauthorized Domain</h2>
+        <p>{{ error }}</p>
+        <p>This application is licensed for specific domains only.</p>
+        <button (click)="openLicenseDialog()">Update License</button>
+      </div>
+    </div>
+  `
+})
+export class DomainErrorComponent {
+  constructor(public licenseService: LicenseService) {}
+}
+```
+
+#### Domain Matching Rules
+
+| License Domain | URL | Match? | Reason |
+|----------------|-----|--------|--------|
+| `fleet.acme.com` | `https://fleet.acme.com/bikes` | ✅ | Exact match |
+| `fleet.acme.com` | `https://api.acme.com/v1` | ❌ | Different subdomain |
+| `*.acme.com` | `https://fleet.acme.com/bikes` | ✅ | Wildcard matches |
+| `*.acme.com` | `https://api.acme.com/v1` | ✅ | Wildcard matches |
+| `*.acme.com` | `https://acme.com/home` | ✅ | Root domain included |
+| `localhost` | `http://localhost:4200` | ✅ | Localhost special case |
+| `localhost` | `http://127.0.0.1:4200` | ✅ | IPv4 localhost |
+| `localhost` | `http://192.168.1.100` | ❌ | LAN IP ≠ localhost |
+
+#### Backward Compatibility
+
+- **Licenses without `domains` field**: Treated as "allow all" (Phase 1 behavior)
+- **Empty `domains` array**: Same as no field (allow all)
+- **At least one domain specified**: Domain checking enforced
+
+#### Security Considerations
+
+| Concern | Mitigation |
+|---------|------------|
+| User modifies stored license | License is signed; modification invalidates signature |
+| User patches domain check in binary | Requires reverse engineering compiled Rust |
+| User intercepts IPC calls | Domain check happens in Rust, not JS |
+| DNS spoofing | Less relevant for desktop app; TLS validates certificates |
+
+#### Testing Phase 2
+
+```bash
+# Generate test license with domains
+cargo run -- \
+  --private-key="YOUR_KEY" \
+  --customer="test@example.com" \
+  --expires="2027-12-31" \
+  --domains="localhost,127.0.0.1"
+
+# Expected behavior:
+# - App loads from localhost:4200 → ✅ Works
+# - App tries to fetch from api.external.com → ❌ Blocked
+# - Navigate to unauthorized domain → ❌ Error shown
+```
 
 ---
 

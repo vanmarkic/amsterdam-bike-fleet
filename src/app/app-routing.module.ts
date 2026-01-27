@@ -16,6 +16,11 @@ const routes: Routes = [
     loadComponent: () => import('./components/issues-page/issues-page.component')
       .then(m => m.IssuesPageComponent)
   },
+  {
+    path: 'license',
+    loadComponent: () => import('./components/license-dialog/license-dialog.component')
+      .then(m => m.LicenseDialogComponent)
+  },
 ];
 
 @NgModule({

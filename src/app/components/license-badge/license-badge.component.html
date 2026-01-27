@@ -1,0 +1,19 @@
+<ng-container *ngIf="badgeData$ | async as badge">
+  <button
+    class="license-badge"
+    [class.licensed]="badge.status === 'licensed'"
+    [class.trial]="badge.status === 'trial'"
+    [class.unlicensed]="badge.status === 'unlicensed'"
+    [class.expired]="badge.status === 'expired'"
+    [class.loading]="loading$ | async"
+    [title]="badge.tooltip"
+    (click)="onBadgeClick()"
+    type="button"
+  >
+    <span class="badge-indicator"></span>
+    <span class="badge-label">{{ badge.label }}</span>
+    <span class="badge-loading" *ngIf="loading$ | async">
+      <span class="spinner"></span>
+    </span>
+  </button>
+</ng-container>

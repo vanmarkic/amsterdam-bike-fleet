@@ -1,10 +1,22 @@
 <nav class="nav-tabs">
-  <a
-    *ngFor="let tab of tabs"
-    [routerLink]="tab.route"
-    routerLinkActive="active"
-    class="nav-tab"
-  >
-    {{ tab.label }}
-  </a>
+  <div class="nav-tabs-left">
+    <a
+      *ngFor="let tab of tabs"
+      [routerLink]="tab.route"
+      routerLinkActive="active"
+      class="nav-tab"
+    >
+      {{ tab.label }}
+    </a>
+  </div>
+  <div class="nav-tabs-right">
+    <app-license-badge (openLicenseDialog)="openLicenseDialog()"></app-license-badge>
+  </div>
 </nav>
+
+<!-- License Dialog (modal mode) -->
+<app-license-dialog
+  [isModal]="true"
+  [isOpen]="showLicenseDialog"
+  (closed)="showLicenseDialog = false">
+</app-license-dialog>

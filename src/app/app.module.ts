@@ -10,6 +10,9 @@ import { StatsPanelComponent } from './components/stats-panel/stats-panel.compon
 import { BikeListPanelComponent } from './components/bike-list-panel/bike-list-panel.component';
 import { BikeListItemComponent } from './components/bike-list-item/bike-list-item.component';
 import { NavTabsComponent } from './components/nav-tabs/nav-tabs.component';
+import { LicenseBannerComponent } from './components/license-banner/license-banner.component';
+import { LicenseBadgeComponent } from './components/license-badge/license-badge.component';
+import { LicenseDialogComponent } from './components/license-dialog/license-dialog.component';
 import { MockApiInterceptor } from './interceptors/mock-api.interceptor';
 
 @NgModule({
@@ -20,13 +23,16 @@ import { MockApiInterceptor } from './interceptors/mock-api.interceptor';
     StatsPanelComponent,
     BikeListPanelComponent,
     BikeListItemComponent,
-    NavTabsComponent
+    NavTabsComponent,
+    LicenseBannerComponent,
+    LicenseBadgeComponent
     // DeliveriesPageComponent and IssuesPageComponent are standalone & lazy-loaded
   ],
   imports: [
     BrowserModule,
     HttpClientModule,
-    AppRoutingModule
+    AppRoutingModule,
+    LicenseDialogComponent  // Standalone component
   ],
   providers: [
     {
