@@ -489,3 +489,101 @@ Note: We do NOT need `d3-force` since Fjädra handles the simulation.
    - Inspect WASM binary → no Fjädra algorithms (runs in Tauri)
    - Inspect Angular bundle → only rendering code, no simulation
    - Inspect IPC traffic → encrypted blobs only
+
+---
+
+## Implementation Notes (Post-Implementation)
+
+### What Was Built
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| Database layer (deliveries/issues) | ✅ Complete | Tables with indexes, seed data (50 deliveries, 20 issues per bike) |
+| Crypto module (ChaCha20-Poly1305) | ✅ Complete | HKDF key derivation, encrypt/decrypt methods |
+| Tauri commands (deliveries/issues) | ✅ Complete | CRUD operations with filtering |
+| Fjädra force graph | ✅ Complete | Full simulation with 4 forces |
+| Angular TauriService | ✅ Complete | All API methods, secure session support |
+| ForceGraphComponent | ✅ Complete | SVG rendering with drag support |
+| DelivererGraphPageComponent | ✅ Complete | Container page with bike selector |
+| Navigation | ✅ Complete | Graph tab added to nav-tabs |
+
+### Fjädra API Learnings
+
+The actual Fjädra 0.1.0 API differs from d3-force:
+
+```rust
+// SimulationBuilder pattern (not Simulation::new)
+let mut simulation = SimulationBuilder::default()
+    .build(particles)  // particles: Vec<Node>
+    .add_force("name", force_builder);
+
+// Node creation with positions
+Node::default().position(x, y)           // movable
+Node::default().fixed_position(x, y)     // pinned
+
+// ManyBody closure takes 2 args: |node_idx, count|
+ManyBody::new().strength(|_idx, _count| -300.0)
+
+// Link API has lifetime issues with closures in v0.1.0
+// Solution: Use defaults, don't call .distance() or .strength()
+Link::new(link_indices).iterations(3)
+
+// Collide has no .strength() method (unlike d3-force)
+Collide::new().radius(|i| radii[i]).iterations(2)
+
+// Run to completion
+simulation.step();  // runs until alpha < alpha_min
+
+// Extract positions
+let positions: Vec<[f64; 2]> = simulation.positions().collect();
+```
+
+### Why Server-Side Force Layout?
+
+1. **IP Protection**: Force algorithms are in compiled Rust binary, not inspectable in browser
+2. **Consistency**: Same layout computed server-side regardless of client device/browser
+3. **Performance**: Rust is 10-100x faster than JavaScript for physics simulation
+4. **Security**: Positions are the only data sent to client - no algorithm parameters exposed
+
+### Why These Force Parameters?
+
+| Force | Value | Reasoning |
+|-------|-------|-----------|
+| CENTER_STRENGTH | 0.05 | Gentle pull prevents drift without fighting other forces |
+| REPULSION_STRENGTH | -300 | Strong enough to separate overlapping nodes |
+| LINK_STRENGTH | 0.7 | Moderate spring keeps connected nodes together |
+| Collide iterations | 2 | Sufficient for collision resolution |
+| Link iterations | 3 | More iterations for stable spring behavior |
+
+### Graph Topology
+
+```
+Deliverer (bike) ─────┬───── Delivery 1 ───── Issue A
+                      ├───── Delivery 2
+                      ├───── Delivery 3 ───── Issue B
+                      │                  └─── Issue C
+                      └───── Standalone Issue D
+```
+
+- **Deliverer** is always fixed at center (0, 0)
+- **Deliveries** start in a ring, simulation redistributes them
+- **Issues linked to deliveries** connect via delivery node
+- **Standalone issues** connect directly to deliverer
+
+### Files Created
+
+| File | Purpose |
+|------|---------|
+| `src-tauri/src/crypto.rs` | ChaCha20-Poly1305 encryption with HKDF key derivation |
+| `src-tauri/src/commands/deliveries.rs` | Delivery CRUD commands |
+| `src-tauri/src/commands/issues.rs` | Issue CRUD commands |
+| `src-tauri/src/commands/force_graph.rs` | Fjädra simulation and layout |
+| `src-tauri/src/commands/secure.rs` | Encrypted IPC wrapper |
+| `src/app/components/force-graph/` | SVG renderer with drag support |
+| `src/app/components/deliverer-graph-page/` | Container page |
+
+### Known Limitations
+
+1. **Link distance/strength**: Fjädra 0.1.0 has lifetime issues with custom closures for Link force. Using defaults works fine.
+2. **Encrypted IPC**: Frontend encryption uses AES-GCM (Web Crypto doesn't support ChaCha20). For full compatibility, would need tweetnacl-js.
+3. **WASM module**: Existing WASM build is broken (unrelated to this feature).

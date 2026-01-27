@@ -27,7 +27,7 @@
 //!     └───────────┘                       └───────────┘
 //! ```
 //!
-//! # Forces Applied
+//! # Forces Applied (Fjädra)
 //! - **Center**: Pulls all nodes toward center (prevents drift)
 //! - **ManyBody**: Repulsion between all nodes (prevents overlap)
 //! - **Collide**: Collision detection based on node radius
@@ -35,30 +35,39 @@
 
 use crate::database::DatabaseError;
 use crate::models::{
-    Bike, Delivery, ForceGraphData, ForceLink, ForceNode,
-    ForceNodeData, ForceNodeType, Issue,
+    Bike, Delivery, ForceGraphData, ForceLink, ForceNode, ForceNodeData, ForceNodeType, Issue,
 };
 use crate::AppState;
+use fjadra::force::{Center, Collide, Link, ManyBody, Node, SimulationBuilder};
 use std::f64::consts::PI;
 use tauri::State;
+
+// ============================================================================
+// Constants
+// ============================================================================
 
 /// Node radii for different types (affects collision detection and rendering)
 const DELIVERER_RADIUS: f64 = 40.0;
 const DELIVERY_RADIUS: f64 = 25.0;
 const ISSUE_RADIUS: f64 = 18.0;
 
-/// Layout distances
-const DELIVERY_DISTANCE: f64 = 120.0;  // Distance from deliverer to deliveries
-const ISSUE_DISTANCE: f64 = 60.0;      // Distance from delivery to issues
+/// Initial layout distances (starting positions before simulation)
+const DELIVERY_DISTANCE: f64 = 120.0;
+const ISSUE_DISTANCE: f64 = 60.0;
 
-/// Force strengths
-const CENTER_STRENGTH: f64 = 0.05;     // How strongly nodes are pulled to center
-const REPULSION_STRENGTH: f64 = -200.0; // Negative = repulsion (ManyBody)
-const LINK_STRENGTH: f64 = 0.7;        // How strongly links pull nodes together
+/// Force configuration
+///
+/// # Why these values?
+/// - CENTER_STRENGTH 0.05: Gentle pull to prevent drift without overwhelming other forces
+/// - REPULSION_STRENGTH -300: Strong enough to separate overlapping nodes
+/// - LINK_STRENGTH 0.7: Stored for ForceLink output (actual spring uses Fjädra defaults)
+const CENTER_STRENGTH: f64 = 0.05;
+const REPULSION_STRENGTH: f64 = -300.0;
+const LINK_STRENGTH: f64 = 0.7;
 
-/// Number of simulation ticks
-/// More ticks = more stable layout, but slower computation
-const SIMULATION_TICKS: usize = 150;
+// ============================================================================
+// Tauri Commands
+// ============================================================================
 
 /// Get force graph layout for a specific deliverer (bike)
 ///
@@ -92,8 +101,8 @@ pub fn get_force_graph_layout(
     let deliveries = db.get_deliveries_by_bike(&bike_id)?;
     let issues = db.get_issues_by_bike(&bike_id)?;
 
-    // Build and compute the force graph
-    compute_force_layout(&bike, &deliveries, &issues)
+    // Build and compute the force graph using Fjädra
+    compute_force_layout(&bike, &deliveries, &issues, None)
 }
 
 /// Update a node's position and recompute the layout
@@ -128,7 +137,7 @@ pub fn update_node_position(
     let issues = db.get_issues_by_bike(&bike_id)?;
 
     // Compute with fixed node position
-    compute_force_layout_with_fixed_node(&bike, &deliveries, &issues, &node_id, x, y)
+    compute_force_layout(&bike, &deliveries, &issues, Some((&node_id, x, y)))
 }
 
 // ============================================================================
@@ -145,7 +154,7 @@ pub fn get_force_graph_layout_internal(
     deliveries: &[Delivery],
     issues: &[Issue],
 ) -> Result<ForceGraphData, DatabaseError> {
-    compute_force_layout(bike, deliveries, issues)
+    compute_force_layout(bike, deliveries, issues, None)
 }
 
 /// Internal function to update node position (called by secure_invoke)
@@ -157,51 +166,70 @@ pub fn update_node_position_internal(
     x: f64,
     y: f64,
 ) -> Result<ForceGraphData, DatabaseError> {
-    compute_force_layout_with_fixed_node(bike, deliveries, issues, node_id, x, y)
+    compute_force_layout(bike, deliveries, issues, Some((node_id, x, y)))
 }
 
 // ============================================================================
-// Layout Computation
+// Layout Computation with Fjädra
 // ============================================================================
 
-/// Compute force layout for given entities
+/// Intermediate node data structure for building the graph
+struct NodeInfo {
+    id: String,
+    node_type: ForceNodeType,
+    label: String,
+    radius: f64,
+    data: ForceNodeData,
+    initial_x: f64,
+    initial_y: f64,
+}
+
+/// Compute force layout using Fjädra simulation
 ///
-/// # Implementation Note
-/// This is a simplified simulation that doesn't use Fjädra directly yet.
-/// The actual Fjädra integration requires:
-/// 1. Adding fjadra to Cargo.toml
-/// 2. Creating particle system
-/// 3. Configuring forces
-/// 4. Running simulation ticks
+/// # Implementation
+/// 1. Build node metadata (id, type, label, data)
+/// 2. Compute initial positions (radial layout)
+/// 3. Create Fjädra Nodes with positions
+/// 4. Build link index pairs for spring forces
+/// 5. Configure and run simulation
+/// 6. Extract final positions and return ForceGraphData
 ///
-/// For now, we use a geometric layout algorithm that produces
-/// similar visual results without the physics simulation.
+/// # Why Fjädra over geometric layout?
+/// - Produces more natural, organic layouts
+/// - Handles complex graph topologies better
+/// - Self-organizes to minimize edge crossings
+/// - Responds realistically to node dragging
 fn compute_force_layout(
     bike: &Bike,
     deliveries: &[Delivery],
     issues: &[Issue],
+    fixed_node: Option<(&str, f64, f64)>,
 ) -> Result<ForceGraphData, DatabaseError> {
-    let mut nodes: Vec<ForceNode> = Vec::new();
+    let mut node_infos: Vec<NodeInfo> = Vec::new();
     let mut links: Vec<ForceLink> = Vec::new();
+    let mut link_indices: Vec<(usize, usize)> = Vec::new();
 
-    // 1. Create deliverer node at center
-    nodes.push(ForceNode {
+    // Track radii for collision detection
+    let mut radii: Vec<f64> = Vec::new();
+
+    // 1. Create deliverer node at center (index 0)
+    node_infos.push(NodeInfo {
         id: bike.id.clone(),
         node_type: ForceNodeType::Deliverer,
         label: bike.name.clone(),
-        x: 0.0,
-        y: 0.0,
         radius: DELIVERER_RADIUS,
         data: ForceNodeData::Deliverer {
             name: bike.name.clone(),
             status: bike.status.clone(),
         },
+        initial_x: 0.0,
+        initial_y: 0.0,
     });
+    radii.push(DELIVERER_RADIUS);
 
     // 2. Create delivery nodes in a ring around center
     let delivery_count = deliveries.len();
     for (i, delivery) in deliveries.iter().enumerate() {
-        // Position in a circle
         let angle = if delivery_count > 0 {
             (i as f64 / delivery_count as f64) * 2.0 * PI
         } else {
@@ -210,69 +238,68 @@ fn compute_force_layout(
         let x = DELIVERY_DISTANCE * angle.cos();
         let y = DELIVERY_DISTANCE * angle.sin();
 
-        nodes.push(ForceNode {
+        let delivery_index = node_infos.len();
+        node_infos.push(NodeInfo {
             id: delivery.id.clone(),
             node_type: ForceNodeType::Delivery,
-            label: format!("{}", delivery.customer_name),
-            x,
-            y,
+            label: delivery.customer_name.clone(),
             radius: DELIVERY_RADIUS,
             data: ForceNodeData::Delivery {
                 status: delivery.status.clone(),
                 customer: delivery.customer_name.clone(),
                 rating: delivery.rating,
             },
+            initial_x: x,
+            initial_y: y,
         });
+        radii.push(DELIVERY_RADIUS);
 
-        // Link: deliverer -> delivery
+        // Link: deliverer (0) -> delivery
         links.push(ForceLink {
             source: bike.id.clone(),
             target: delivery.id.clone(),
             strength: LINK_STRENGTH,
         });
+        link_indices.push((0, delivery_index));
     }
 
     // 3. Create issue nodes
-    // Issues linked to deliveries are positioned near that delivery
-    // Standalone issues are positioned in outer ring
-    let standalone_issues: Vec<_> = issues
-        .iter()
-        .filter(|i| i.delivery_id.is_none())
-        .collect();
-    let linked_issues: Vec<_> = issues
-        .iter()
-        .filter(|i| i.delivery_id.is_some())
-        .collect();
+    let standalone_issues: Vec<_> = issues.iter().filter(|i| i.delivery_id.is_none()).collect();
+    let linked_issues: Vec<_> = issues.iter().filter(|i| i.delivery_id.is_some()).collect();
 
     // Position linked issues near their delivery
     for issue in &linked_issues {
         let delivery_id = issue.delivery_id.as_ref().unwrap();
 
-        // Find the delivery node's position
-        let (delivery_x, delivery_y) = nodes
+        // Find the delivery node's index and position
+        let (delivery_idx, delivery_x, delivery_y) = node_infos
             .iter()
-            .find(|n| &n.id == delivery_id)
-            .map(|n| (n.x, n.y))
-            .unwrap_or((DELIVERY_DISTANCE, 0.0));
+            .enumerate()
+            .find(|(_, n)| &n.id == delivery_id)
+            .map(|(idx, n)| (idx, n.initial_x, n.initial_y))
+            .unwrap_or((1, DELIVERY_DISTANCE, 0.0));
 
         // Offset from delivery position
-        let angle_offset = (issues.iter().position(|i| i.id == issue.id).unwrap_or(0) as f64) * 0.5;
-        let x = delivery_x + ISSUE_DISTANCE * (angle_offset).cos();
-        let y = delivery_y + ISSUE_DISTANCE * (angle_offset).sin();
+        let angle_offset =
+            (issues.iter().position(|i| i.id == issue.id).unwrap_or(0) as f64) * 0.8;
+        let x = delivery_x + ISSUE_DISTANCE * angle_offset.cos();
+        let y = delivery_y + ISSUE_DISTANCE * angle_offset.sin();
 
-        nodes.push(ForceNode {
+        let issue_index = node_infos.len();
+        node_infos.push(NodeInfo {
             id: issue.id.clone(),
             node_type: ForceNodeType::Issue,
             label: issue.category.as_str().to_string(),
-            x,
-            y,
             radius: ISSUE_RADIUS,
             data: ForceNodeData::Issue {
                 category: issue.category.clone(),
                 resolved: issue.resolved,
                 reporter: issue.reporter_type.clone(),
             },
+            initial_x: x,
+            initial_y: y,
         });
+        radii.push(ISSUE_RADIUS);
 
         // Link: delivery -> issue
         links.push(ForceLink {
@@ -280,32 +307,35 @@ fn compute_force_layout(
             target: issue.id.clone(),
             strength: LINK_STRENGTH * 0.8,
         });
+        link_indices.push((delivery_idx, issue_index));
     }
 
     // Position standalone issues in outer ring
     let standalone_count = standalone_issues.len();
     for (i, issue) in standalone_issues.iter().enumerate() {
         let angle = if standalone_count > 0 {
-            (i as f64 / standalone_count as f64) * 2.0 * PI + PI / 4.0 // Offset from deliveries
+            (i as f64 / standalone_count as f64) * 2.0 * PI + PI / 4.0
         } else {
             0.0
         };
         let x = (DELIVERY_DISTANCE + ISSUE_DISTANCE) * angle.cos();
         let y = (DELIVERY_DISTANCE + ISSUE_DISTANCE) * angle.sin();
 
-        nodes.push(ForceNode {
+        let issue_index = node_infos.len();
+        node_infos.push(NodeInfo {
             id: issue.id.clone(),
             node_type: ForceNodeType::Issue,
             label: issue.category.as_str().to_string(),
-            x,
-            y,
             radius: ISSUE_RADIUS,
             data: ForceNodeData::Issue {
                 category: issue.category.clone(),
                 resolved: issue.resolved,
                 reporter: issue.reporter_type.clone(),
             },
+            initial_x: x,
+            initial_y: y,
         });
+        radii.push(ISSUE_RADIUS);
 
         // Link: deliverer -> standalone issue
         links.push(ForceLink {
@@ -313,9 +343,84 @@ fn compute_force_layout(
             target: issue.id.clone(),
             strength: LINK_STRENGTH * 0.5,
         });
+        link_indices.push((0, issue_index));
     }
 
-    // Calculate bounds
+    // 4. Create Fjädra nodes with initial positions
+    // Handle fixed node if specified (for drag operations)
+    let fixed_node_index = fixed_node.and_then(|(id, _, _)| {
+        node_infos.iter().position(|n| n.id == id)
+    });
+
+    let particles: Vec<Node> = node_infos
+        .iter()
+        .enumerate()
+        .map(|(idx, info)| {
+            // Check if this is the fixed node
+            if let Some((fixed_id, fx, fy)) = fixed_node {
+                if info.id == fixed_id {
+                    return Node::default().fixed_position(fx, fy);
+                }
+            }
+            // Also fix deliverer at center if not being dragged
+            if idx == 0 && fixed_node_index != Some(0) {
+                return Node::default().fixed_position(0.0, 0.0);
+            }
+            Node::default().position(info.initial_x, info.initial_y)
+        })
+        .collect();
+
+    // 5. Build and run Fjädra simulation
+    //
+    // Fjädra API notes:
+    // - ManyBody.strength takes |node_idx, count| -> f64
+    // - Link uses default distance/strength (avoids closure lifetime issues)
+    // - Collide.radius takes |node_idx| -> f64
+    let radii_clone = radii.clone();
+    let mut simulation = SimulationBuilder::default()
+        .build(particles)
+        .add_force("center", Center::new().strength(CENTER_STRENGTH))
+        .add_force(
+            "charge",
+            ManyBody::new().strength(|_node_idx, _count| REPULSION_STRENGTH),
+        )
+        .add_force(
+            "collide",
+            Collide::new()
+                .radius(move |i| radii_clone[i] + 5.0) // Add padding
+                .iterations(2),
+        )
+        .add_force(
+            "links",
+            // Use Link with defaults - the simulation will use sensible defaults
+            // for distance and strength based on link topology
+            Link::new(link_indices).iterations(3),
+        );
+
+    // Run simulation to completion
+    // .step() runs until alpha drops below alpha_min
+    simulation.step();
+
+    // 6. Extract final positions and build output
+    let positions: Vec<[f64; 2]> = simulation.positions().collect();
+
+    let nodes: Vec<ForceNode> = node_infos
+        .into_iter()
+        .enumerate()
+        .map(|(i, info)| {
+            let [x, y] = positions.get(i).copied().unwrap_or([info.initial_x, info.initial_y]);
+            ForceNode {
+                id: info.id,
+                node_type: info.node_type,
+                label: info.label,
+                x,
+                y,
+                radius: info.radius,
+                data: info.data,
+            }
+        })
+        .collect();
+
     let bounds = compute_bounds(&nodes);
 
     Ok(ForceGraphData {
@@ -325,30 +430,6 @@ fn compute_force_layout(
         center_y: 0.0,
         bounds,
     })
-}
-
-/// Compute layout with one node fixed at a specific position
-fn compute_force_layout_with_fixed_node(
-    bike: &Bike,
-    deliveries: &[Delivery],
-    issues: &[Issue],
-    fixed_node_id: &str,
-    fixed_x: f64,
-    fixed_y: f64,
-) -> Result<ForceGraphData, DatabaseError> {
-    // First compute normal layout
-    let mut layout = compute_force_layout(bike, deliveries, issues)?;
-
-    // Then fix the specified node's position
-    if let Some(node) = layout.nodes.iter_mut().find(|n| n.id == fixed_node_id) {
-        node.x = fixed_x;
-        node.y = fixed_y;
-    }
-
-    // Recalculate bounds
-    layout.bounds = compute_bounds(&layout.nodes);
-
-    Ok(layout)
 }
 
 /// Calculate bounding box of all nodes
@@ -371,5 +452,10 @@ fn compute_bounds(nodes: &[ForceNode]) -> (f64, f64, f64, f64) {
 
     // Add padding
     let padding = 20.0;
-    (min_x - padding, max_x + padding, min_y - padding, max_y + padding)
+    (
+        min_x - padding,
+        max_x + padding,
+        min_y - padding,
+        max_y + padding,
+    )
 }

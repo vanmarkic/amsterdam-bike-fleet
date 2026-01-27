@@ -1,12 +1,23 @@
 /**
- * Custom Webpack Configuration for JavaScript Obfuscation
+ * Custom Webpack Configuration for JavaScript Obfuscation and WASM Support
  *
- * This configuration applies JavaScript obfuscation to production builds only.
+ * This configuration:
+ * 1. Enables WebAssembly module support for Angular
+ * 2. Applies JavaScript obfuscation to production builds only
  * Development builds remain fast and debuggable.
  */
 
-const WebpackObfuscator = require('webpack-obfuscator');
-const obfuscatorConfig = require('./obfuscator.config');
+const path = require('path');
+
+// Conditionally require obfuscator (may not be needed for all builds)
+let WebpackObfuscator;
+let obfuscatorConfig;
+try {
+  WebpackObfuscator = require('webpack-obfuscator');
+  obfuscatorConfig = require('./obfuscator.config');
+} catch (e) {
+  // Obfuscator not available, will skip
+}
 
 /**
  * Custom webpack configuration
@@ -15,10 +26,30 @@ const obfuscatorConfig = require('./obfuscator.config');
  * @returns {object} Modified webpack configuration
  */
 module.exports = (config, _options) => {
+  // Enable WebAssembly support
+  config.experiments = {
+    ...config.experiments,
+    asyncWebAssembly: true,
+    syncWebAssembly: true
+  };
+
+  // Add WASM file handling rule
+  config.module.rules.push({
+    test: /\.wasm$/,
+    type: 'webassembly/async'
+  });
+
+  // Add path alias for WASM module (using web target which loads via fetch)
+  config.resolve = config.resolve || {};
+  config.resolve.alias = {
+    ...config.resolve.alias,
+    '@wasm': path.resolve(__dirname, 'wasm-lib/pkg-web')
+  };
+
   // Only apply obfuscation in production mode
   const isProduction = config.mode === 'production';
 
-  if (isProduction) {
+  if (isProduction && WebpackObfuscator && obfuscatorConfig) {
     console.log('\n🔒 Applying JavaScript obfuscation for production build...\n');
 
     // Configure vendor chunk splitting to separate app code from third-party

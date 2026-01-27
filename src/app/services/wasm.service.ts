@@ -176,15 +176,21 @@ export class WasmService {
    */
   private async loadWasmModule(): Promise<void> {
     try {
-      // Dynamic import of the WASM package
+      // Dynamic import of the WASM package (web target)
       // Uses path alias @wasm/* configured in tsconfig.json
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore - Path resolved at build time, stub exists for dev
+      // @ts-ignore - Path resolved at build time
       const wasm = await import('@wasm/amsterdam_bike_fleet_wasm');
 
-      // Initialize the WASM module (calls the init function in lib.rs)
-      if (typeof wasm.default === 'function') {
-        await wasm.default();
+      // Initialize the WASM module with the WASM binary URL
+      // For web target, default() fetches and instantiates the WASM
+      if (typeof (wasm as any).default === 'function') {
+        // In production, WASM is in /assets/wasm/
+        // The web target's default() accepts a URL to the WASM binary
+        const wasmUrl = '/assets/wasm/amsterdam_bike_fleet_wasm_bg.wasm';
+        await (wasm as any).default(wasmUrl);
+      } else if (typeof (wasm as any).init === 'function') {
+        await (wasm as any).init();
       }
 
       this.wasmModule = wasm as unknown as WasmModule;
@@ -194,7 +200,7 @@ export class WasmService {
     } catch (error) {
       console.error('[WasmService] Failed to initialize WASM module:', error);
       throw new Error(
-        'Failed to load WASM module. Make sure to run "npm run wasm:build" first. ' +
+        'Failed to load WASM module. Make sure to run "npm run wasm:build:web" first. ' +
         `Error: ${error instanceof Error ? error.message : String(error)}`
       );
     }
