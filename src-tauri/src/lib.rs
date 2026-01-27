@@ -2,6 +2,7 @@
 
 mod commands;
 mod database;
+pub mod license;
 mod models;
 
 use database::Database;
@@ -29,6 +30,12 @@ pub fn run() {
             commands::database::get_database_stats,
             commands::database::is_database_initialized,
             commands::health::health_check,
+            // License management (Phase 1)
+            commands::license::activate_license,
+            commands::license::get_license_status,
+            commands::license::deactivate_license,
+            commands::license::is_feature_licensed,
+            commands::license::validate_license,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

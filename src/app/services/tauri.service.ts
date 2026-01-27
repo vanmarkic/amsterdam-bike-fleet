@@ -79,6 +79,39 @@ export interface UpdateBikeStatusRequest {
 }
 
 /**
+ * License information from the Rust backend
+ */
+export interface LicenseInfo {
+  customer: string;
+  company?: string;
+  product: string;
+  expires: string;
+  features: string[];
+  seats?: number;
+  issued?: string;
+  version: number;
+}
+
+/**
+ * License status response
+ */
+export interface LicenseStatus {
+  valid: boolean;
+  info: LicenseInfo | null;
+  error: string | null;
+  days_remaining: number | null;
+}
+
+/**
+ * License activation response
+ */
+export interface ActivateLicenseResponse {
+  success: boolean;
+  status: LicenseStatus;
+  message: string;
+}
+
+/**
  * Service for communicating with the Tauri Rust backend via IPC
  *
  * Usage:
@@ -208,5 +241,47 @@ export class TauriService {
    */
   async getFleetStats(): Promise<FleetStats> {
     return this.invokeCommand<FleetStats>('get_fleet_stats');
+  }
+
+  // ============================================
+  // License Commands
+  // ============================================
+
+  /**
+   * Activate a license key
+   * Validates and stores the license if valid
+   */
+  async activateLicense(licenseKey: string): Promise<ActivateLicenseResponse> {
+    return this.invokeCommand<ActivateLicenseResponse>('activate_license', { licenseKey });
+  }
+
+  /**
+   * Get current license status
+   * Returns the status of the stored license (if any)
+   */
+  async getLicenseStatus(): Promise<LicenseStatus> {
+    return this.invokeCommand<LicenseStatus>('get_license_status');
+  }
+
+  /**
+   * Deactivate (remove) the current license
+   */
+  async deactivateLicense(): Promise<string> {
+    return this.invokeCommand<string>('deactivate_license');
+  }
+
+  /**
+   * Check if a specific feature is licensed
+   */
+  async isFeatureLicensed(feature: string): Promise<boolean> {
+    return this.invokeCommand<boolean>('is_feature_licensed', { feature });
+  }
+
+  /**
+   * Validate a license key without storing it
+   * Use this to preview license info before activation
+   */
+  async validateLicense(licenseKey: string): Promise<LicenseStatus> {
+    return this.invokeCommand<LicenseStatus>('validate_license', { licenseKey });
   }
 }

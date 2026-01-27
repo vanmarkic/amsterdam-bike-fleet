@@ -170,31 +170,93 @@ Extends Phase 1 to tie licenses to specific customer domains.
 
 ---
 
-## Implementation Checklist
+## Implementation Status
 
-### Phase 1: Signed License Keys
+### Phase 1: Signed License Keys ✅ IMPLEMENTED
 
-- [ ] Add `ed25519-dalek` and `base64` crates to `src-tauri/Cargo.toml`
-- [ ] Generate Ed25519 keypair
-  - [ ] Store private key SECURELY (never in repo!)
-  - [ ] Embed public key in Rust source
-- [ ] Create `src-tauri/src/license.rs` module
-  - [ ] `LicenseInfo` struct (customer, expires, features)
-  - [ ] `verify_license(key: &str) -> Result<LicenseInfo, LicenseError>`
-  - [ ] `is_feature_enabled(feature: &str) -> bool`
-- [ ] Add Tauri commands
-  - [ ] `activate_license` - verify and store license
-  - [ ] `get_license_status` - check current license
-  - [ ] `deactivate_license` - remove stored license
-- [ ] Create license generator CLI (separate project)
-  - [ ] Input: customer info, expiration, features
-  - [ ] Output: signed license key string
-- [ ] Add license UI in Angular
-  - [ ] License entry dialog
-  - [ ] License status display
-  - [ ] Feature gating based on license
+| Component | Status | Location |
+|-----------|--------|----------|
+| Ed25519 crates | ✅ Done | `src-tauri/Cargo.toml` |
+| Keypair generated | ✅ Done | Public key in `license.rs`, private key kept secret |
+| License module | ✅ Done | `src-tauri/src/license.rs` |
+| Tauri commands | ✅ Done | `src-tauri/src/commands/license.rs` |
+| License generator | ✅ Done | `license-generator/` (separate crate) |
+| Angular service | ✅ Done | `src/app/services/license.service.ts` |
 
-### Phase 2: Domain Verification
+### Files Created
+
+```
+amsterdam-bike-fleet/
+├── src-tauri/src/
+│   ├── license.rs              # License verification (Ed25519)
+│   └── commands/license.rs     # Tauri IPC commands
+├── license-generator/          # Separate CLI tool (keep private!)
+│   ├── Cargo.toml
+│   └── src/main.rs
+└── src/app/services/
+    ├── tauri.service.ts        # Extended with license commands
+    └── license.service.ts      # Angular license state management
+```
+
+### Using the License Generator
+
+```bash
+# Navigate to the generator
+cd license-generator
+
+# Generate a new keypair (do this ONCE, save securely!)
+cargo run -- --generate-keys
+
+# Generate a license key
+cargo run -- \
+  --private-key="YOUR_PRIVATE_KEY" \
+  --customer="customer@example.com" \
+  --company="ACME Corp" \
+  --expires="2027-12-31" \
+  --features="premium,export,api"
+
+# Verify a license key
+cargo run -- \
+  --verify="ABF-..." \
+  --public-key="YOUR_PUBLIC_KEY"
+```
+
+### Tauri Commands Available
+
+| Command | Description |
+|---------|-------------|
+| `activate_license` | Verify and store a license key |
+| `get_license_status` | Get current license status |
+| `deactivate_license` | Remove stored license |
+| `is_feature_licensed` | Check if a feature is licensed |
+| `validate_license` | Validate key without storing |
+
+### Angular Service Usage
+
+```typescript
+import { LicenseService } from './services/license.service';
+
+@Component({...})
+export class MyComponent {
+  constructor(public license: LicenseService) {}
+
+  // Template: <div *ngIf="license.isLicensed$ | async">Premium</div>
+
+  async activate() {
+    const response = await this.license.activateLicense('ABF-...');
+    if (response.success) {
+      console.log('Licensed to:', response.status.info?.customer);
+    }
+  }
+
+  // Check feature sync
+  get hasPremium(): boolean {
+    return this.license.hasFeature('premium');
+  }
+}
+```
+
+### Phase 2: Domain Verification (TODO)
 
 - [ ] Extend `LicenseInfo` to include `domains: Vec<String>`
 - [ ] Add WebView URL interception in Rust

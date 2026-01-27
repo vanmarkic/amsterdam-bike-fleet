@@ -1,0 +1,19 @@
+[package]
+name = "license-generator"
+version = "0.1.0"
+edition = "2021"
+description = "License key generator for Amsterdam Bike Fleet"
+publish = false
+
+[[bin]]
+name = "license-generator"
+path = "src/main.rs"
+
+[dependencies]
+ed25519-dalek = { version = "2.1", features = ["rand_core"] }
+base64 = "0.22"
+rand = "0.8"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+clap = { version = "4.5", features = ["derive"] }
+chrono = "0.4"

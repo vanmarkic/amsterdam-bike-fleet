@@ -168,6 +168,14 @@ export class AppModule {}
 
 ## Available WASM Functions
 
+The WASM module provides three categories of functions:
+
+1. **Analysis** - Fleet statistics, validation, geographic calculations
+2. **Simulation** - Movement physics, status transitions, speed modeling
+3. **Optimization** - Fast hashing for change detection
+
+---
+
 ### Fleet Statistics
 
 Calculate comprehensive statistics for the bike fleet:
@@ -240,6 +248,117 @@ const radiusKm = 2.0;
 const nearbyBikes = wasmService.findBikesInRadius(bikes, center, radiusKm);
 console.log(`Found ${nearbyBikes.length} bikes within ${radiusKm}km`);
 ```
+
+---
+
+### Simulation Functions
+
+These functions power the real-time fleet simulation, providing deterministic, reproducible behavior.
+
+#### Complete Simulation Tick (Recommended)
+
+The main entry point that combines all simulation steps in one call:
+
+```typescript
+const result = wasmService.simulationTick(bikes, Date.now(), 0.10);
+
+// Result contains:
+// - bikes: Updated bike positions
+// - statistics: Fleet statistics
+// - positionHash: For deck.gl updateTriggers
+// - stateHash: Includes status and speed
+// - statusTransitions: Count of bikes that changed status
+// - boundsCorrections: Count of bikes clamped to bounds
+```
+
+This is the most efficient approach as it avoids multiple JS↔WASM boundary crossings.
+
+#### Movement Simulation
+
+Simulate bike movement for one tick with realistic physics:
+
+```typescript
+const result = wasmService.simulateBikeMovement(bikes, Date.now());
+// Returns: { bikes, movementsApplied, boundCorrections }
+```
+
+- **Idle bikes**: Drift slightly (GPS jitter simulation)
+- **Active bikes**: Move purposefully in random directions
+- **Bounds enforcement**: Positions clamped to Amsterdam operational area
+
+#### Status Transitions
+
+Uses a Markov chain model for realistic status changes:
+
+```typescript
+const result = wasmService.transitionBikeStatus('delivering', Math.random());
+// Returns: { newStatus, transitionOccurred, probabilityUsed }
+```
+
+Transition probabilities:
+- **Delivering**: 70% stay → 15% returning → 15% idle
+- **Returning**: 65% stay → 25% idle → 10% delivering
+- **Idle**: 60% stay → 30% delivering → 10% returning
+
+Batch processing for multiple bikes:
+
+```typescript
+const results = wasmService.transitionBikeStatusBatch(
+  ['delivering', 'idle', 'returning'],
+  [0.5, 0.8, 0.3]
+);
+```
+
+#### Speed Calculation
+
+Calculate speed based on status and traffic conditions:
+
+```typescript
+const result = wasmService.calculateBikeSpeed('delivering', false, 0.5);
+// Returns: { speed, baseSpeed, trafficPenalty, statusFactor }
+```
+
+Speed ranges:
+- **Delivering**: 15-35 km/h
+- **Returning**: 10-25 km/h
+- **Idle**: 0 km/h
+- **Traffic penalty**: 40% reduction in congestion zones
+
+Batch processing:
+
+```typescript
+const speeds = wasmService.calculateBikeSpeedBatch(
+  ['delivering', 'idle'],
+  [false, true],
+  [0.5, 0.7]
+);
+```
+
+---
+
+### Optimization Functions
+
+#### Position Hashing
+
+Fast hash computation for deck.gl `updateTriggers`:
+
+```typescript
+const hash = wasmService.hashBikePositions(bikes);
+// Use in deck.gl layer:
+// updateTriggers: { getPosition: hash }
+```
+
+Uses FNV-1a algorithm for O(n) deterministic hashing.
+
+#### State Hashing
+
+More comprehensive hash including status and speed:
+
+```typescript
+const hash = wasmService.hashBikeState(bikes);
+```
+
+Use when you need to detect any state change, not just position
 
 ## TypeScript Configuration
 

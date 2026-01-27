@@ -62,3 +62,7 @@ Thumbs.db
 /test-results/
 /playwright-report/
 /playwright/.cache/
+
+# License generator (Rust CLI tool)
+/license-generator/target/
+/license-generator/Cargo.lock
