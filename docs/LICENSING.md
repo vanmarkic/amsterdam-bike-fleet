@@ -256,6 +256,53 @@ export class MyComponent {
 }
 ```
 
+### License Expiration
+
+Licenses include an expiration date that is **enforced at runtime**.
+
+**Generating licenses with expiration:**
+
+```bash
+# 1-year license
+cargo run -- \
+  --private-key="YOUR_KEY" \
+  --customer="customer@example.com" \
+  --expires="2027-01-27"
+
+# Trial license (7 days)
+cargo run -- \
+  --private-key="YOUR_KEY" \
+  --customer="trial@example.com" \
+  --expires="2026-02-03" \
+  --features="trial"
+```
+
+**Expiration behavior:**
+
+| Scenario | Result |
+|----------|--------|
+| License not expired | ✅ `valid: true`, app works normally |
+| License expired | ❌ `valid: false`, error: "License has expired" |
+| Expiring soon (≤30 days) | ⚠️ `isExpiringSoon$` emits `true` for UI warnings |
+
+**Angular observables for expiration:**
+
+```typescript
+// In component
+license.daysRemaining$    // Observable<number | null> - days until expiry
+license.isExpiringSoon$   // Observable<boolean> - true if ≤30 days left
+license.isExpired$        // Observable<boolean> - true if expired
+
+// Example: Show warning banner
+<div *ngIf="license.isExpiringSoon$ | async" class="warning">
+  License expires in {{ license.daysRemaining$ | async }} days
+</div>
+```
+
+**Date formats supported:**
+- `YYYY-MM-DD` (e.g., "2027-12-31") - expires at 23:59:59 UTC
+- RFC 3339 (e.g., "2027-12-31T23:59:59Z") - exact timestamp
+
 ### Phase 2: Domain Verification (TODO)
 
 - [ ] Extend `LicenseInfo` to include `domains: Vec<String>`
