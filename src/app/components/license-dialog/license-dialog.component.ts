@@ -43,8 +43,10 @@ import { LicenseStatus, LicenseInfo } from '../../services/tauri.service';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LicenseDialogComponent implements OnInit, OnDestroy {
-  /** Whether to display as a modal overlay or inline content */
-  @Input() isModal = true;
+  /** Whether to display as a modal overlay or inline content.
+   *  Default is false so component shows content when used as a routed page.
+   *  Set to true when using as a modal dialog. */
+  @Input() isModal = false;
 
   /** Controls modal visibility when isModal is true */
   @Input() isOpen = false;

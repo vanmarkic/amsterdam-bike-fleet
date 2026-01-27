@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { invoke } from '@tauri-apps/api/core';
 
 /**
  * Bike status enum matching Rust backend
@@ -133,22 +134,52 @@ export class TauriService {
   /**
    * Initialize Tauri invoke function
    * Sets up the bridge to Rust backend
+   *
+   * Tauri v2 uses @tauri-apps/api for the invoke function.
+   * We detect Tauri by checking if the invoke function works.
    */
   private async initializeTauri(): Promise<void> {
-    if (typeof window !== 'undefined' && '__TAURI__' in window) {
-      try {
-        // Tauri v2 uses window.__TAURI__.core.invoke
-        const tauri = (window as any).__TAURI__;
-        if (tauri?.core?.invoke) {
-          this.invoke = tauri.core.invoke;
-        } else if (tauri?.invoke) {
-          // Fallback for older API
-          this.invoke = tauri.invoke;
-        }
-      } catch (e) {
-        console.warn('Failed to initialize Tauri:', e);
+    console.log('[TauriService] Initializing...');
+
+    // Check if we're in Tauri by testing if invoke works
+    try {
+      // Try to call health_check - if we're in Tauri this will work
+      // If not in Tauri, the invoke import will throw or return undefined
+      const result = await invoke('health_check');
+      console.log('[TauriService] ✓ Tauri detected via health_check:', result);
+      this.invoke = invoke;
+      return;
+    } catch (e: any) {
+      // If the error is about the command not existing, we're still in Tauri
+      // If it's about Tauri not being available, we're in browser mode
+      const errorMsg = e?.message || String(e);
+      console.log('[TauriService] invoke test error:', errorMsg);
+
+      if (errorMsg.includes('not found') || errorMsg.includes('command')) {
+        // Command doesn't exist but Tauri is present
+        console.log('[TauriService] ✓ Tauri detected (command error, but runtime present)');
+        this.invoke = invoke;
+        return;
       }
     }
+
+    // Fallback: check for __TAURI__ global (withGlobalTauri: true in config)
+    if (typeof window !== 'undefined' && '__TAURI__' in window) {
+      try {
+        const tauri = (window as any).__TAURI__;
+        console.log('[TauriService] __TAURI__ global found, keys:', Object.keys(tauri || {}));
+
+        if (tauri?.core?.invoke) {
+          this.invoke = tauri.core.invoke;
+          console.log('[TauriService] ✓ Initialized via __TAURI__.core.invoke');
+          return;
+        }
+      } catch (e) {
+        console.warn('[TauriService] Failed to use __TAURI__ global:', e);
+      }
+    }
+
+    console.log('[TauriService] ✗ Not running in Tauri environment (browser mode)');
   }
 
   /**
