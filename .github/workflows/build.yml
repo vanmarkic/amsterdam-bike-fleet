@@ -9,6 +9,23 @@ on:
     branches: [main, master]
   workflow_dispatch:
 
+# =====================================================
+# Required Secrets for Code Signing
+# =====================================================
+# Windows:
+#   WINDOWS_CERTIFICATE          - Base64 encoded .pfx certificate
+#                                  (create with: certutil -encode cert.pfx base64cert.txt)
+#   WINDOWS_CERTIFICATE_PASSWORD - Password for the .pfx file
+#
+# macOS (optional, for notarization):
+#   APPLE_CERTIFICATE            - Base64 encoded .p12 certificate
+#   APPLE_CERTIFICATE_PASSWORD   - Password for the .p12 file
+#   APPLE_SIGNING_IDENTITY       - e.g., "Developer ID Application: Your Name (XXXXXXXXXX)"
+#   APPLE_ID                     - Apple ID email for notarization
+#   APPLE_PASSWORD               - App-specific password for notarization
+#   APPLE_TEAM_ID                - Apple Developer Team ID
+# =====================================================
+
 jobs:
   build:
     strategy:
@@ -54,18 +71,90 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
+      # =====================================================
+      # Windows Code Signing
+      # =====================================================
+      - name: Import Windows code signing certificate
+        if: matrix.platform == 'windows-latest'
+        env:
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        run: |
+          if ($env:WINDOWS_CERTIFICATE) {
+            Write-Host "Importing Windows code signing certificate..."
+            New-Item -ItemType directory -Path certificate -Force
+            Set-Content -Path certificate/tempCert.txt -Value $env:WINDOWS_CERTIFICATE
+            certutil -decode certificate/tempCert.txt certificate/certificate.pfx
+            Remove-Item -Path certificate/tempCert.txt
+            Import-PfxCertificate -FilePath certificate/certificate.pfx -CertStoreLocation Cert:\CurrentUser\My -Password (ConvertTo-SecureString -String $env:WINDOWS_CERTIFICATE_PASSWORD -Force -AsPlainText)
+            Remove-Item -Path certificate/certificate.pfx
+            Write-Host "Certificate imported successfully"
+          } else {
+            Write-Host "No Windows certificate provided, skipping code signing"
+          }
+
+      # =====================================================
+      # macOS Code Signing (optional)
+      # =====================================================
+      - name: Import macOS code signing certificate
+        if: matrix.platform == 'macos-latest'
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          if [ -n "$APPLE_CERTIFICATE" ]; then
+            echo "Importing macOS code signing certificate..."
+            CERTIFICATE_PATH=$RUNNER_TEMP/certificate.p12
+            KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+            KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
+
+            # Decode certificate
+            echo -n "$APPLE_CERTIFICATE" | base64 --decode -o $CERTIFICATE_PATH
+
+            # Create temporary keychain
+            security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+            security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+            security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+            # Import certificate
+            security import $CERTIFICATE_PATH -P "$APPLE_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+            security list-keychain -d user -s $KEYCHAIN_PATH
+            security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+            # Cleanup
+            rm -f $CERTIFICATE_PATH
+            echo "Certificate imported successfully"
+          else
+            echo "No macOS certificate provided, skipping code signing"
+          fi
+
       - name: Install npm dependencies
         run: npm ci
 
       - name: Build WASM module
         run: npm run wasm:build:release
 
+      # Build with code signing environment variables
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # macOS notarization (if secrets are set)
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
           args: ${{ matrix.args }}
+
+      # Cleanup macOS keychain
+      - name: Cleanup macOS keychain
+        if: matrix.platform == 'macos-latest' && always()
+        run: |
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          if [ -f "$KEYCHAIN_PATH" ]; then
+            security delete-keychain $KEYCHAIN_PATH || true
+          fi
 
       - name: Upload artifacts (macOS)
         if: matrix.platform == 'macos-latest'
