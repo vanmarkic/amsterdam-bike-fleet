@@ -95,17 +95,29 @@ export class LicenseService {
   }
 
   /**
-   * Check if running in Tauri (license features available)
+   * Check if running in Tauri (license features available) - sync version
+   * Note: May return false during startup. Use isTauriEnvironmentAsync() for guards.
    */
   isTauriEnvironment(): boolean {
     return this.tauri.isTauri();
   }
 
   /**
+   * Check if running in Tauri - async version (waits for init)
+   * Use this in guards to ensure Tauri is fully initialized.
+   */
+  async isTauriEnvironmentAsync(): Promise<boolean> {
+    return this.tauri.isTauriAsync();
+  }
+
+  /**
    * Check the current license status
    */
   async checkLicense(): Promise<LicenseStatus | null> {
-    if (!this.tauri.isTauri()) {
+    // Wait for Tauri to be fully initialized
+    const isTauri = await this.tauri.isTauriAsync();
+
+    if (!isTauri) {
       // Not in Tauri, return unlicensed status
       const browserStatus: LicenseStatus = {
         valid: false,

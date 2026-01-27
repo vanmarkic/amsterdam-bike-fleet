@@ -17,7 +17,7 @@ use thiserror::Error;
 /// The PRIVATE key must NEVER be included here - it stays in the license generator.
 ///
 /// Generated with: cargo run --bin license-generator -- --generate-keys
-const PUBLIC_KEY_BASE64: &str = "jt3MBV8VHlj2HptKkZX1H-pv4IGgmnGjmf637N1_-b8";
+const PUBLIC_KEY_BASE64: &str = "uEbFkbKMx4wvBPRcldwSa8pTEM5SaIOEiwiYW3Ym2VI";
 
 /// License key prefix for easy identification
 const LICENSE_PREFIX: &str = "ABF-";

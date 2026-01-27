@@ -124,9 +124,10 @@ export interface ActivateLicenseResponse {
 })
 export class TauriService {
   private invoke: ((cmd: string, args?: Record<string, unknown>) => Promise<unknown>) | null = null;
+  private initPromise: Promise<void> | null = null;
 
   constructor() {
-    this.initializeTauri();
+    this.initPromise = this.initializeTauri();
   }
 
   /**
@@ -151,9 +152,27 @@ export class TauriService {
   }
 
   /**
-   * Check if running inside Tauri
+   * Wait for Tauri initialization to complete
+   * Call this before checking isTauri() in guards
+   */
+  async ensureInitialized(): Promise<void> {
+    if (this.initPromise) {
+      await this.initPromise;
+    }
+  }
+
+  /**
+   * Check if running inside Tauri (sync - use after ensureInitialized)
    */
   isTauri(): boolean {
+    return this.invoke !== null;
+  }
+
+  /**
+   * Check if running inside Tauri (async - safe to call anytime)
+   */
+  async isTauriAsync(): Promise<boolean> {
+    await this.ensureInitialized();
     return this.invoke !== null;
   }
 
