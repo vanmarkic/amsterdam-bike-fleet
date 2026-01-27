@@ -16,6 +16,7 @@ import { ScatterplotLayer, PolygonLayer } from '@deck.gl/layers';
 import * as maplibregl from 'maplibre-gl';
 import { FleetApiService } from '../../services/fleet-api.service';
 import { FleetData, BikePosition, PollutionZone, TrafficJam } from '../../models/fleet.models';
+import { WasmService } from '../../services/wasm.service';
 
 @Component({
   selector: 'app-fleet-map',
@@ -69,10 +70,28 @@ export class FleetMapComponent implements OnInit, AfterViewInit, OnDestroy {
     light: [241, 196, 15, 100]      // Yellow
   };
 
+  // WASM service for accelerated calculations
+  private wasmInitialized = false;
+
   constructor(
     private fleetApiService: FleetApiService,
-    private cdr: ChangeDetectorRef
-  ) {}
+    private cdr: ChangeDetectorRef,
+    private wasmService: WasmService
+  ) {
+    this.initializeWasm();
+  }
+
+  /**
+   * Initialize WASM for hash calculations and statistics
+   */
+  private async initializeWasm(): Promise<void> {
+    try {
+      await this.wasmService.initialize();
+      this.wasmInitialized = true;
+    } catch (error) {
+      console.warn('[FleetMapComponent] WASM not available, using TypeScript fallback');
+    }
+  }
 
   ngOnInit(): void {}
 
@@ -117,8 +136,24 @@ export class FleetMapComponent implements OnInit, AfterViewInit, OnDestroy {
         this.updateCount++;
         this.fleetData = data;
         this.lastUpdate = data.timestamp;
-        this.bikeCount = data.bikes.length;
-        this.deliveringCount = data.bikes.filter(b => b.status === 'delivering').length;
+
+        // Use WASM for statistics calculation (includes count by status)
+        if (this.wasmInitialized) {
+          try {
+            const stats = this.wasmService.calculateFleetStatistics(data.bikes);
+            this.bikeCount = stats.totalBikes;
+            this.deliveringCount = stats.deliveringCount;
+          } catch {
+            // Fallback to manual calculation
+            this.bikeCount = data.bikes.length;
+            this.deliveringCount = data.bikes.filter(b => b.status === 'delivering').length;
+          }
+        } else {
+          // TypeScript fallback
+          this.bikeCount = data.bikes.length;
+          this.deliveringCount = data.bikes.filter(b => b.status === 'delivering').length;
+        }
+
         this.updateLayers(data);
         this.cdr.markForCheck();
         if (isDevMode()) {
@@ -239,11 +274,25 @@ export class FleetMapComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.TRAFFIC_COLORS[severity] || this.TRAFFIC_COLORS['light'];
   }
 
-  /** Fast hash of bike positions - avoids O(n) string concatenation */
+  /**
+   * Fast hash of bike positions for deck.gl updateTriggers.
+   *
+   * Uses WASM FNV-1a algorithm when available, otherwise falls back
+   * to TypeScript bit manipulation.
+   */
   private hashBikePositions(bikes: BikePosition[]): number {
+    // Use WASM hash for better performance and consistency
+    if (this.wasmInitialized) {
+      try {
+        return this.wasmService.hashBikePositions(bikes);
+      } catch {
+        // Fall through to TypeScript implementation
+      }
+    }
+
+    // TypeScript fallback - O(n) bit manipulation
     let hash = 0;
     for (const bike of bikes) {
-      // Combine coordinates into hash using bit operations
       hash = ((hash << 5) - hash + (bike.longitude * 1000000) | 0) | 0;
       hash = ((hash << 5) - hash + (bike.latitude * 1000000) | 0) | 0;
     }

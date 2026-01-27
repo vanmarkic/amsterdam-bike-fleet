@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable, of, interval } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 import { BikePosition, PollutionZone, TrafficJam, FleetData } from '../models/fleet.models';
+import { WasmService } from './wasm.service';
 
 @Injectable({
   providedIn: 'root'
@@ -9,6 +10,10 @@ import { BikePosition, PollutionZone, TrafficJam, FleetData } from '../models/fl
 export class FleetApiService {
   // Amsterdam center coordinates
   private readonly AMSTERDAM_CENTER = { lng: 4.9041, lat: 52.3676 };
+
+  // WASM mode flag - set to true to use Rust simulation
+  private useWasmSimulation = true;
+  private wasmInitialized = false;
 
   // Bike courier names (Dutch-style)
   private readonly COURIER_NAMES = [
@@ -83,8 +88,32 @@ export class FleetApiService {
 
   private bikePositions: BikePosition[] = [];
 
-  constructor() {
+  // Status transition probability per tick (10% chance of status change)
+  private readonly STATUS_TRANSITION_PROBABILITY = 0.10;
+
+  constructor(private wasmService: WasmService) {
     this.initializeBikes();
+    this.initializeWasm();
+  }
+
+  /**
+   * Initialize WASM module for accelerated simulation
+   */
+  private async initializeWasm(): Promise<void> {
+    if (!WasmService.isWasmSupported()) {
+      console.warn('[FleetApiService] WASM not supported, using TypeScript fallback');
+      this.useWasmSimulation = false;
+      return;
+    }
+
+    try {
+      await this.wasmService.initialize();
+      this.wasmInitialized = true;
+      console.log('[FleetApiService] WASM simulation enabled');
+    } catch (error) {
+      console.warn('[FleetApiService] WASM init failed, using TypeScript fallback:', error);
+      this.useWasmSimulation = false;
+    }
   }
 
   private initializeBikes(): void {
@@ -105,10 +134,35 @@ export class FleetApiService {
     return 'idle';
   }
 
+  /**
+   * Update bike positions using WASM simulation (preferred) or TypeScript fallback.
+   *
+   * The WASM implementation provides:
+   * - Deterministic simulation (same seed = same result)
+   * - Markov chain status transitions
+   * - Bounds enforcement
+   * - Performance optimization
+   */
   private updateBikePositions(): void {
+    // Try WASM simulation first
+    if (this.useWasmSimulation && this.wasmInitialized) {
+      try {
+        const result = this.wasmService.simulationTick(
+          this.bikePositions,
+          Date.now(),
+          this.STATUS_TRANSITION_PROBABILITY
+        );
+        this.bikePositions = result.bikes;
+        return;
+      } catch (error) {
+        console.warn('[FleetApiService] WASM simulation failed, falling back to TypeScript:', error);
+        // Fall through to TypeScript implementation
+      }
+    }
+
+    // TypeScript fallback (original implementation)
     this.bikePositions = this.bikePositions.map(bike => {
       // Simulate movement (bikes move ~0.001 degrees per update = ~100m)
-      // More visible movement for demo purposes
       const movement = bike.status === 'idle' ? 0.0002 : 0.001;
       const angle = Math.random() * Math.PI * 2;
 
@@ -119,9 +173,9 @@ export class FleetApiService {
       newLng = Math.max(4.85, Math.min(4.95, newLng));
       newLat = Math.max(52.34, Math.min(52.40, newLat));
 
-      // Occasionally change status
+      // Occasionally change status (10% probability)
       let newStatus = bike.status;
-      if (Math.random() < 0.1) {
+      if (Math.random() < this.STATUS_TRANSITION_PROBABILITY) {
         newStatus = this.getRandomStatus();
       }
 
