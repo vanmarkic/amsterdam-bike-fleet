@@ -1,0 +1,109 @@
+
+[0;36m═══════════════════════════════════════════════════════════════════[0m
+[0;36m  PRE-FLIGHT CHECKS[0m
+[0;36m═══════════════════════════════════════════════════════════════════[0m
+
+[0;32m✓[0m Node.js version 20.19.2 (✓ >= 18 required)
+[0;32m✓[0m Git working directory is clean
+[0;34m[2026-01-29 16:02:23][0m Current Angular version: 15
+[0;32m✓[0m Created backup branch: pre-angular-15-original-migration
+
+[0;36m═══════════════════════════════════════════════════════════════════[0m
+[0;36m  MIGRATING TO ANGULAR 16[0m
+[0;36m═══════════════════════════════════════════════════════════════════[0m
+
+[0;32m✓[0m Created backup branch: pre-angular-16-migration
+[0;34m[2026-01-29 16:02:23][0m Known breaking changes for Angular 16:
+[1;33m
+  - NgModules can now be standalone (optional)
+  - Required inputs can be marked with required: true
+  - Signals introduced (preview)
+  - DestroyRef introduced for takeUntilDestroyed()
+  - Router uses functional guards by default
+  [0m
+[0;34m[2026-01-29 16:02:23][0m Running Angular update schematics...
+Repository is not clean. Update changes will be mixed with pre-existing changes.
+The installed Angular CLI version is outdated.
+Installing a temporary Angular CLI versioned 16.2.16 to perform the update.
+- Installing packages...
+✔ Packages successfully installed.
+Repository is not clean. Update changes will be mixed with pre-existing changes.
+Using package manager: npm
+Collecting installed dependencies...
+Found 34 dependencies.
+Fetching dependency metadata from registry...
+    Updating package.json with dependency @angular-devkit/build-angular @ "16.2.16" (was "15.2.11")...
+    Updating package.json with dependency @angular/cli @ "16.2.16" (was "15.2.11")...
+    Updating package.json with dependency @angular/compiler-cli @ "16.2.12" (was "15.2.10")...
+    Updating package.json with dependency @angular/animations @ "16.2.12" (was "15.2.10")...
+    Updating package.json with dependency @angular/common @ "16.2.12" (was "15.2.10")...
+    Updating package.json with dependency @angular/compiler @ "16.2.12" (was "15.2.10")...
+    Updating package.json with dependency @angular/core @ "16.2.12" (was "15.2.10")...
+    Updating package.json with dependency @angular/forms @ "16.2.12" (was "15.2.10")...
+    Updating package.json with dependency @angular/platform-browser @ "16.2.12" (was "15.2.10")...
+    Updating package.json with dependency @angular/platform-browser-dynamic @ "16.2.12" (was "15.2.10")...
+    Updating package.json with dependency @angular/router @ "16.2.12" (was "15.2.10")...
+    Updating package.json with dependency zone.js @ "0.13.3" (was "0.12.0")...
+UPDATE package.json (2492 bytes)
+- Installing packages...
+✔ Packages successfully installed.
+** Executing migrations of package '@angular/cli' **
+
+❯ Remove 'defaultProject' option from workspace configuration.
+  The project to use will be determined from the current working directory.
+  Migration completed (No changes made).
+
+❯ Replace removed 'defaultCollection' option in workspace configuration with 'schematicCollections'.
+  Migration completed (No changes made).
+
+❯ Update the '@angular-devkit/build-angular:server' builder configuration to disable 'buildOptimizer' for non optimized builds.
+  Migration completed (No changes made).
+
+** Executing migrations of package '@angular/core' **
+
+❯ In Angular version 15.2, the guard and resolver interfaces (CanActivate, Resolve, etc) were deprecated.
+  This migration removes imports and 'implements' clauses that contain them.
+  Migration completed (No changes made).
+
+❯ As of Angular v16, the `moduleId` property of `@Component` is deprecated as it no longer has any effect.
+  Migration completed (No changes made).
+
+[0;32m✓[0m Angular core packages updated to 16
+[0;34m[2026-01-29 16:03:34][0m Updating TypeScript to ~5.0.0
+[0;34m[2026-01-29 16:03:34][0m   → npm install typescript@~5.0.0 --save-dev
+npm error code ERESOLVE
+npm error ERESOLVE could not resolve
+npm error
+npm error While resolving: @angular-builders/custom-webpack@15.0.0
+npm error Found: @angular/compiler-cli@16.2.12
+npm error node_modules/@angular/compiler-cli
+npm error   peer @angular/compiler-cli@"^16.0.0" from @angular-devkit/build-angular@16.2.16
+npm error   node_modules/@angular-devkit/build-angular
+npm error     dev @angular-devkit/build-angular@"^16.2.16" from the root project
+npm error   peer @angular/compiler-cli@"^16.0.0" from @ngtools/webpack@16.2.16
+npm error   node_modules/@ngtools/webpack
+npm error     @ngtools/webpack@"16.2.16" from @angular-devkit/build-angular@16.2.16
+npm error     node_modules/@angular-devkit/build-angular
+npm error       dev @angular-devkit/build-angular@"^16.2.16" from the root project
+npm error   1 more (the root project)
+npm error
+npm error Could not resolve dependency:
+npm error peer @angular/compiler-cli@"^15.0.0" from @angular-builders/custom-webpack@15.0.0
+npm error node_modules/@angular-builders/custom-webpack
+npm error   dev @angular-builders/custom-webpack@"^15.0.0" from the root project
+npm error
+npm error Conflicting peer dependency: @angular/compiler-cli@15.2.10
+npm error node_modules/@angular/compiler-cli
+npm error   peer @angular/compiler-cli@"^15.0.0" from @angular-builders/custom-webpack@15.0.0
+npm error   node_modules/@angular-builders/custom-webpack
+npm error     dev @angular-builders/custom-webpack@"^15.0.0" from the root project
+npm error
+npm error Fix the upstream dependency conflict, or retry
+npm error this command with --force or --legacy-peer-deps
+npm error to accept an incorrect (and potentially broken) dependency resolution.
+npm error
+npm error
+npm error For a full report see:
+npm error /Users/dragan/.npm/_logs/2026-01-29T15_03_34_184Z-eresolve-report.txt
+npm error A complete log of this run can be found in: /Users/dragan/.npm/_logs/2026-01-29T15_03_34_184Z-debug-0.log
+[0;31m✗[0m Updating TypeScript to ~5.0.0 failed

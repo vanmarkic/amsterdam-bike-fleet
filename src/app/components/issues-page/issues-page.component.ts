@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 import { Issue, IssueCategory, IssueReporterType } from '../../models/fleet.models';
@@ -16,7 +16,7 @@ interface CategoryInfo {
 @Component({
   selector: 'app-issues-page',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './issues-page.component.html',
   styleUrls: ['./issues-page.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush

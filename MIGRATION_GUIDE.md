@@ -1,6 +1,12 @@
 # Angular 15 → 18 Migration Guide
 
-This document provides comprehensive guidance for migrating the Amsterdam Bike Fleet application from Angular 15 to Angular 18.
+This document provides comprehensive guidance for migrating Angular projects from version 15 to 18, based on real-world migration experience and community best practices.
+
+**Sources:**
+- [Angular Update Guide](https://angular.dev/update-guide)
+- [Angular Migration Schematics](https://angular.dev/reference/migrations)
+- [Standalone Migration](https://angular.dev/reference/migrations/standalone)
+- [Control Flow Migration](https://angular.dev/reference/migrations/control-flow)
 
 ## Quick Start
 
@@ -13,6 +19,9 @@ chmod +x scripts/migrate-to-angular18.sh
 
 # Run the full migration
 ./scripts/migrate-to-angular18.sh
+
+# With optional modernizations (standalone + new control flow)
+./scripts/migrate-to-angular18.sh --standalone --control-flow
 ```
 
 ## Prerequisites
@@ -225,60 +234,142 @@ npm run tauri:build
 
 ## Optional Modernizations
 
-After successful migration, consider these improvements:
+After successful migration, Angular provides schematics to modernize your codebase automatically.
 
-### 1. Convert to Fully Standalone
+### 1. Convert to Standalone Components
 
-Replace `AppModule` with standalone bootstrap:
+Angular 16+ fully supports standalone components without NgModules. Run the migration in three steps:
 
-```typescript
-// main.ts (new pattern)
-import { bootstrapApplication } from '@angular/platform-browser';
-import { AppComponent } from './app/app.component';
-import { appConfig } from './app/app.config';
+```bash
+# Step 1: Convert all declarations to standalone
+ng g @angular/core:standalone
 
-bootstrapApplication(AppComponent, appConfig);
+# Step 2: Remove unnecessary NgModules
+ng g @angular/core:standalone
+
+# Step 3: Bootstrap with standalone API
+ng g @angular/core:standalone
 ```
 
-### 2. Adopt New Control Flow
+Or use the script option:
+```bash
+./scripts/migrate-to-angular18.sh --standalone
+```
 
-Replace `*ngIf` and `*ngFor` with new syntax:
+**Before (NgModule):**
+```typescript
+@NgModule({
+  declarations: [AppComponent],
+  imports: [BrowserModule],
+  bootstrap: [AppComponent]
+})
+export class AppModule {}
+```
 
+**After (Standalone):**
+```typescript
+// main.ts
+bootstrapApplication(AppComponent, {
+  providers: [provideRouter(routes)]
+});
+```
+
+### 2. Migrate to New Control Flow
+
+Angular 17+ introduces `@if`, `@for`, `@switch` to replace structural directives. These will be **deprecated in Angular 20**.
+
+```bash
+# Automatic migration
+ng g @angular/core:control-flow
+
+# Or use script option
+./scripts/migrate-to-angular18.sh --control-flow
+```
+
+**Before:**
 ```html
-<!-- Before -->
-<div *ngIf="bike">{{ bike.name }}</div>
-<div *ngFor="let bike of bikes">{{ bike.name }}</div>
+<div *ngIf="bike; else noBike">{{ bike.name }}</div>
+<ng-template #noBike>No bike</ng-template>
 
-<!-- After -->
+<div *ngFor="let bike of bikes; trackBy: trackById">
+  {{ bike.name }}
+</div>
+```
+
+**After:**
+```html
 @if (bike) {
   <div>{{ bike.name }}</div>
+} @else {
+  <div>No bike</div>
 }
+
 @for (bike of bikes; track bike.id) {
   <div>{{ bike.name }}</div>
 }
 ```
 
-### 3. Use Signal-Based Inputs
+### 3. Use Signal-Based APIs
+
+Angular 18 stabilizes signal inputs, outputs, and queries:
 
 ```typescript
-// Before
-@Input() bikeId: string;
+// Signal Inputs (replaces @Input)
+bikeId = input<string>();                    // optional
+bikeId = input.required<string>();           // required
+bikeId = input<string>('default');           // with default
 
-// After
-bikeId = input<string>();
-```
-
-### 4. Use Signal-Based Outputs
-
-```typescript
-// Before
-@Output() bikeSelected = new EventEmitter<Bike>();
-
-// After
+// Signal Outputs (replaces @Output)
 bikeSelected = output<Bike>();
+this.bikeSelected.emit(bike);
+
+// Signal Queries (replaces @ViewChild/@ContentChild)
+bikeList = viewChild<BikeListComponent>('bikeList');
+allBikes = viewChildren<BikeComponent>(BikeComponent);
 ```
 
-### 5. Consider Zoneless (Experimental)
+### 4. Use Typed Reactive Forms
+
+Angular 16+ requires typed forms. Migrate gradually:
+
+```typescript
+// Untyped (legacy, still works)
+form = new UntypedFormControl('');
+
+// Typed (recommended)
+name = new FormControl<string>('', { nonNullable: true });
+form = new FormGroup({
+  name: new FormControl<string>(''),
+  age: new FormControl<number>(0)
+});
+```
+
+### 5. Use takeUntilDestroyed()
+
+Replace manual destroy$ subjects:
+
+```typescript
+// Before
+private destroy$ = new Subject<void>();
+
+ngOnInit() {
+  this.data$.pipe(takeUntil(this.destroy$)).subscribe(...);
+}
+
+ngOnDestroy() {
+  this.destroy$.next();
+  this.destroy$.complete();
+}
+
+// After (Angular 16+)
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+
+constructor() {
+  this.data$.pipe(takeUntilDestroyed()).subscribe(...);
+}
+```
+
+### 6. Consider Zoneless (Experimental)
 
 For maximum performance, Angular 18 supports zoneless applications:
 
@@ -291,7 +382,7 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-**Warning**: This requires all change detection to be signal-based or manually triggered.
+**Warning**: This requires all change detection to be signal-based or manually triggered with `ChangeDetectorRef.detectChanges()`.
 
 ## Troubleshooting
 
@@ -341,11 +432,77 @@ rm -rf node_modules package-lock.json
 npm install
 ```
 
+## Common Issues and Solutions
+
+### ERESOLVE Peer Dependency Conflicts
+
+**Problem:** npm 7+ treats peer dependency mismatches as errors.
+
+**Solutions:**
+1. Use `--legacy-peer-deps` flag:
+   ```bash
+   npm install --legacy-peer-deps
+   ```
+
+2. Set globally:
+   ```bash
+   npm config set legacy-peer-deps true
+   ```
+
+3. Use npm overrides in `package.json`:
+   ```json
+   {
+     "overrides": {
+       "@problematic/package": "^18.0.0"
+     }
+   }
+   ```
+
+### Third-Party Library Compatibility
+
+**Problem:** Libraries don't always update in sync with Angular releases.
+
+**Solutions:**
+1. Check library's GitHub for Angular 18 support
+2. Use `npm ls` to identify dependency tree issues
+3. Replace outdated libraries with maintained alternatives
+4. Open issues/PRs on library repositories
+
+### Angular Material MDC Migration (v15+)
+
+**Problem:** Material 15 switched to MDC-based components with class name changes.
+
+**Solution:**
+- Classes changed from `mat-*` to `mat-mdc-*`
+- Run `ng update @angular/material` for automatic migration
+- Update custom SCSS that targets Material classes
+
+### Typed Reactive Forms Errors (v16+)
+
+**Problem:** Loosely typed form code throws compile errors.
+
+**Solution:**
+- Use `UntypedFormControl` / `UntypedFormGroup` for gradual migration
+- Migrate to typed forms module by module
+- Example: `new FormControl<string>('', { nonNullable: true })`
+
+### SSR Hydration Mismatches
+
+**Problem:** Server and client rendered content differs.
+
+**Solution:**
+- Use `TransferState` to avoid double API fetches
+- Ensure stable element IDs in lists
+- Set up SSR-focused integration tests
+
 ## Resources
 
 - [Angular Update Guide](https://angular.dev/update-guide)
+- [Angular Migration Schematics](https://angular.dev/reference/migrations)
 - [Angular 16 Release Notes](https://blog.angular.io/angular-v16-is-here-4d7a28ec680d)
 - [Angular 17 Release Notes](https://blog.angular.io/introducing-angular-v17-4d7bca9e7ef4)
 - [Angular 18 Release Notes](https://blog.angular.io/angular-v18-is-now-available-e79d5ac0affe)
-- [Migration to Standalone](https://angular.dev/reference/migrations/standalone)
-- [New Control Flow](https://angular.dev/guide/templates/control-flow)
+- [Standalone Migration](https://angular.dev/reference/migrations/standalone)
+- [Control Flow Migration](https://angular.dev/reference/migrations/control-flow)
+- [Typed Reactive Forms](https://angular.dev/guide/forms/typed-forms)
+- [Real-World Migration Guide](https://www.mol-tech.us/blog/migrate-angular-15-to-angular-18)

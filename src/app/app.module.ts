@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -15,32 +15,27 @@ import { LicenseBadgeComponent } from './components/license-badge/license-badge.
 import { LicenseDialogComponent } from './components/license-dialog/license-dialog.component';
 import { MockApiInterceptor } from './interceptors/mock-api.interceptor';
 
-@NgModule({
-  declarations: [
-    AppComponent,
-    FleetMapComponent,
-    LegendComponent,
-    StatsPanelComponent,
-    BikeListPanelComponent,
-    BikeListItemComponent,
-    NavTabsComponent,
-    LicenseBannerComponent,
-    LicenseBadgeComponent
-    // DeliveriesPageComponent and IssuesPageComponent are standalone & lazy-loaded
-  ],
-  imports: [
-    BrowserModule,
-    HttpClientModule,
-    AppRoutingModule,
-    LicenseDialogComponent  // Standalone component
-  ],
-  providers: [
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: MockApiInterceptor,
-      multi: true
-    }
-  ],
-  bootstrap: [AppComponent]
-})
+@NgModule({ declarations: [
+        AppComponent,
+        FleetMapComponent,
+        LegendComponent,
+        StatsPanelComponent,
+        BikeListPanelComponent,
+        BikeListItemComponent,
+        NavTabsComponent,
+        LicenseBannerComponent,
+        LicenseBadgeComponent
+        // DeliveriesPageComponent and IssuesPageComponent are standalone & lazy-loaded
+    ],
+    bootstrap: [AppComponent], imports: [BrowserModule,
+        AppRoutingModule,
+        LicenseDialogComponent // Standalone component
+    ], providers: [
+        {
+            provide: HTTP_INTERCEPTORS,
+            useClass: MockApiInterceptor,
+            multi: true
+        },
+        provideHttpClient(withInterceptorsFromDi())
+    ] })
 export class AppModule { }

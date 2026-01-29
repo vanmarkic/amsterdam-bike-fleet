@@ -1,10 +1,10 @@
 <!--
-  Deliverer Graph Page
+Deliverer Graph Page
 
-  Layout:
-  - Header with title and deliverer selector
-  - Main area with force graph
-  - Side panel with selected node details
+Layout:
+- Header with title and deliverer selector
+- Main area with force graph
+- Side panel with selected node details
 -->
 
 <div class="graph-page">
@@ -21,14 +21,15 @@
           [value]="selectedBikeId || ''"
           (change)="onBikeSelect($event)"
           [disabled]="loading"
-        >
-          <option value="">-- Select --</option>
-          <option
-            *ngFor="let bike of bikes"
-            [value]="bike.id"
           >
-            {{ getBikeName(bike) }}
-          </option>
+          <option value="">-- Select --</option>
+          @for (bike of bikes; track bike) {
+            <option
+              [value]="bike.id"
+              >
+              {{ getBikeName(bike) }}
+            </option>
+          }
         </select>
       </div>
 
@@ -38,61 +39,71 @@
         (click)="loadFleetData()"
         [disabled]="loading"
         title="Refresh fleet data"
-      >
+        >
         ↻
       </button>
     </div>
   </header>
 
   <!-- Loading state -->
-  <div *ngIf="loading" class="loading-state">
-    <div class="spinner"></div>
-    <span>Loading fleet data...</span>
-  </div>
+  @if (loading) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <span>Loading fleet data...</span>
+    </div>
+  }
 
   <!-- Error state -->
-  <div *ngIf="error && !loading" class="error-state">
-    <span class="error-icon">⚠</span>
-    <span>{{ error }}</span>
-    <button (click)="loadFleetData()">Retry</button>
-  </div>
+  @if (error && !loading) {
+    <div class="error-state">
+      <span class="error-icon">⚠</span>
+      <span>{{ error }}</span>
+      <button (click)="loadFleetData()">Retry</button>
+    </div>
+  }
 
   <!-- Main content -->
-  <main *ngIf="!loading && !error" class="main-content">
-    <!-- Force Graph -->
-    <div class="graph-area">
-      <app-force-graph
-        [bikeId]="selectedBikeId"
-        [width]="800"
-        [height]="600"
-        (nodeClick)="onNodeClick($event)"
-        (nodeDblClick)="onNodeDblClick($event)"
-      ></app-force-graph>
-    </div>
-
-    <!-- Details Panel -->
-    <aside class="details-panel" *ngIf="selectedNode">
-      <div class="panel-header">
-        <h2>{{ selectedNode.label }}</h2>
-        <button class="close-btn" (click)="clearSelection()" title="Close">×</button>
+  @if (!loading && !error) {
+    <main class="main-content">
+      <!-- Force Graph -->
+      <div class="graph-area">
+        <app-force-graph
+          [bikeId]="selectedBikeId"
+          [width]="800"
+          [height]="600"
+          (nodeClick)="onNodeClick($event)"
+          (nodeDblClick)="onNodeDblClick($event)"
+        ></app-force-graph>
       </div>
-
-      <div class="panel-content">
-        <table class="details-table">
-          <tr *ngFor="let detail of getNodeDetails()">
-            <th>{{ detail.label }}</th>
-            <td>{{ detail.value }}</td>
-          </tr>
-        </table>
-      </div>
-    </aside>
-  </main>
+      <!-- Details Panel -->
+      @if (selectedNode) {
+        <aside class="details-panel">
+          <div class="panel-header">
+            <h2>{{ selectedNode.label }}</h2>
+            <button class="close-btn" (click)="clearSelection()" title="Close">×</button>
+          </div>
+          <div class="panel-content">
+            <table class="details-table">
+              @for (detail of getNodeDetails(); track detail) {
+                <tr>
+                  <th>{{ detail.label }}</th>
+                  <td>{{ detail.value }}</td>
+                </tr>
+              }
+            </table>
+          </div>
+        </aside>
+      }
+    </main>
+  }
 
   <!-- Instructions -->
-  <footer class="page-footer" *ngIf="!loading && !error">
-    <p>
-      <strong>Tip:</strong> Drag nodes to rearrange. Click a node to see details.
-      Double-click for more options.
-    </p>
-  </footer>
+  @if (!loading && !error) {
+    <footer class="page-footer">
+      <p>
+        <strong>Tip:</strong> Drag nodes to rearrange. Click a node to see details.
+        Double-click for more options.
+      </p>
+    </footer>
+  }
 </div>

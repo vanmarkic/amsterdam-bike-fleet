@@ -11,9 +11,11 @@
             id="resolved-filter"
             [value]="resolvedFilter"
             (change)="onResolvedFilterChange($any($event.target).value)">
-            <option *ngFor="let option of resolvedOptions" [value]="option.value">
-              {{ option.label }}
-            </option>
+            @for (option of resolvedOptions; track option) {
+              <option [value]="option.value">
+                {{ option.label }}
+              </option>
+            }
           </select>
         </div>
 
@@ -23,112 +25,118 @@
             id="category-filter"
             [value]="categoryFilter"
             (change)="onCategoryFilterChange($any($event.target).value)">
-            <option *ngFor="let option of categoryOptions" [value]="option.value">
-              {{ option.label }}
-            </option>
+            @for (option of categoryOptions; track option) {
+              <option [value]="option.value">
+                {{ option.label }}
+              </option>
+            }
           </select>
         </div>
       </div>
     </header>
 
-    <div class="issues-list" *ngIf="!loading && !error">
-      <div
-        *ngFor="let issue of issues; trackBy: trackByIssueId"
-        class="issue-item"
-        [class.selected]="selectedIssue?.id === issue.id"
-        (click)="selectIssue(issue)">
-
-        <span class="category-badge" [attr.data-category]="issue.category">
-          {{ getCategoryInfo(issue.category).label }}
-        </span>
-
-        <div class="issue-info">
-          <span class="reporter-type">{{ getReporterTypeLabel(issue.reporterType) }}</span>
-          <span class="resolved-badge" [class.resolved]="issue.resolved" [class.unresolved]="!issue.resolved">
-            {{ issue.resolved ? 'Resolved' : 'Unresolved' }}
-          </span>
-        </div>
+    @if (!loading && !error) {
+      <div class="issues-list">
+        @for (issue of issues; track trackByIssueId($index, issue)) {
+          <div
+            class="issue-item"
+            [class.selected]="selectedIssue?.id === issue.id"
+            (click)="selectIssue(issue)">
+            <span class="category-badge" [attr.data-category]="issue.category">
+              {{ getCategoryInfo(issue.category).label }}
+            </span>
+            <div class="issue-info">
+              <span class="reporter-type">{{ getReporterTypeLabel(issue.reporterType) }}</span>
+              <span class="resolved-badge" [class.resolved]="issue.resolved" [class.unresolved]="!issue.resolved">
+                {{ issue.resolved ? 'Resolved' : 'Unresolved' }}
+              </span>
+            </div>
+          </div>
+        }
+        @if (issues.length === 0) {
+          <div class="empty-state">
+            No issues found matching your filters.
+          </div>
+        }
       </div>
+    }
 
-      <div class="empty-state" *ngIf="issues.length === 0">
-        No issues found matching your filters.
+    @if (loading) {
+      <div class="loading-state">
+        <span class="spinner"></span>
+        Loading issues...
       </div>
-    </div>
+    }
 
-    <div class="loading-state" *ngIf="loading">
-      <span class="spinner"></span>
-      Loading issues...
-    </div>
-
-    <div class="error-state" *ngIf="error">
-      {{ error }}
-    </div>
+    @if (error) {
+      <div class="error-state">
+        {{ error }}
+      </div>
+    }
   </aside>
 
   <!-- Right Panel: Issue Detail -->
   <main class="issue-detail-panel">
-    <div class="detail-content" *ngIf="selectedIssue">
-      <header class="detail-header">
-        <h2>Issue Details</h2>
-        <span class="category-badge large" [attr.data-category]="selectedIssue.category">
-          {{ getCategoryInfo(selectedIssue.category).label }}
-        </span>
-      </header>
-
-      <div class="detail-body">
-        <div class="detail-row">
-          <span class="detail-label">ID</span>
-          <span class="detail-value">{{ selectedIssue.id }}</span>
-        </div>
-
-        <div class="detail-row" *ngIf="selectedIssue.deliveryId">
-          <span class="detail-label">Delivery ID</span>
-          <span class="detail-value">{{ selectedIssue.deliveryId }}</span>
-        </div>
-
-        <div class="detail-row">
-          <span class="detail-label">Bike ID</span>
-          <span class="detail-value">{{ selectedIssue.bikeId }}</span>
-        </div>
-
-        <div class="detail-row">
-          <span class="detail-label">Reporter Type</span>
-          <span class="detail-value reporter-badge" [attr.data-reporter]="selectedIssue.reporterType">
-            {{ getReporterTypeLabel(selectedIssue.reporterType) }}
+    @if (selectedIssue) {
+      <div class="detail-content">
+        <header class="detail-header">
+          <h2>Issue Details</h2>
+          <span class="category-badge large" [attr.data-category]="selectedIssue.category">
+            {{ getCategoryInfo(selectedIssue.category).label }}
           </span>
-        </div>
-
-        <div class="detail-row">
-          <span class="detail-label">Category</span>
-          <span class="detail-value">{{ getCategoryInfo(selectedIssue.category).label }}</span>
-        </div>
-
-        <div class="detail-row">
-          <span class="detail-label">Status</span>
-          <span class="detail-value">
-            <span class="resolved-badge" [class.resolved]="selectedIssue.resolved" [class.unresolved]="!selectedIssue.resolved">
-              {{ selectedIssue.resolved ? 'Resolved' : 'Unresolved' }}
+        </header>
+        <div class="detail-body">
+          <div class="detail-row">
+            <span class="detail-label">ID</span>
+            <span class="detail-value">{{ selectedIssue.id }}</span>
+          </div>
+          @if (selectedIssue.deliveryId) {
+            <div class="detail-row">
+              <span class="detail-label">Delivery ID</span>
+              <span class="detail-value">{{ selectedIssue.deliveryId }}</span>
+            </div>
+          }
+          <div class="detail-row">
+            <span class="detail-label">Bike ID</span>
+            <span class="detail-value">{{ selectedIssue.bikeId }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Reporter Type</span>
+            <span class="detail-value reporter-badge" [attr.data-reporter]="selectedIssue.reporterType">
+              {{ getReporterTypeLabel(selectedIssue.reporterType) }}
             </span>
-          </span>
-        </div>
-
-        <div class="detail-row">
-          <span class="detail-label">Created</span>
-          <span class="detail-value">{{ formatDate(selectedIssue.createdAt) }}</span>
-        </div>
-
-        <div class="detail-row description">
-          <span class="detail-label">Description</span>
-          <p class="detail-value">{{ selectedIssue.description }}</p>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Category</span>
+            <span class="detail-value">{{ getCategoryInfo(selectedIssue.category).label }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Status</span>
+            <span class="detail-value">
+              <span class="resolved-badge" [class.resolved]="selectedIssue.resolved" [class.unresolved]="!selectedIssue.resolved">
+                {{ selectedIssue.resolved ? 'Resolved' : 'Unresolved' }}
+              </span>
+            </span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Created</span>
+            <span class="detail-value">{{ formatDate(selectedIssue.createdAt) }}</span>
+          </div>
+          <div class="detail-row description">
+            <span class="detail-label">Description</span>
+            <p class="detail-value">{{ selectedIssue.description }}</p>
+          </div>
         </div>
       </div>
-    </div>
+    }
 
-    <div class="empty-detail" *ngIf="!selectedIssue">
-      <div class="empty-icon">
-        <span class="material-icon">inbox</span>
+    @if (!selectedIssue) {
+      <div class="empty-detail">
+        <div class="empty-icon">
+          <span class="material-icon">inbox</span>
+        </div>
+        <p>Select an issue from the list to view details</p>
       </div>
-      <p>Select an issue from the list to view details</p>
-    </div>
+    }
   </main>
 </div>

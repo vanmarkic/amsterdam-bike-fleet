@@ -1,0 +1,643 @@
+Angular Migration Log - Thu Jan 29 16:28:50 CET 2026
+Project: /Users/dragan/Documents/angularV15/amsterdam-bike-fleet
+Options: DRY_RUN=false FORCE=true CLEAN=false FROM=
+
+
+═══════════════════════════════════════════════════════════════════
+  PRE-FLIGHT CHECKS
+═══════════════════════════════════════════════════════════════════
+
+✓ Node.js v20.19.2 (✓ >= 18 required)
+✓ npm v10.8.2
+✓ Git working directory is clean
+[2026-01-29 16:28:50] Detected Angular version: 15
+✓ Created backup branch: pre-angular-15-original-migration
+
+═══════════════════════════════════════════════════════════════════
+  MIGRATING TO ANGULAR 16
+═══════════════════════════════════════════════════════════════════
+
+✓ Created backup branch: pre-angular-16-migration
+[2026-01-29 16:28:50] Key changes in Angular 16:
+
+  • Standalone components become first-class
+  • Required inputs: required: true
+  • Signals introduced (preview)
+  • DestroyRef for takeUntilDestroyed()
+  • Functional guards by default
+  
+
+
+--- Step 1: Update Third-Party Builders ---
+
+[2026-01-29 16:28:50] Updating @angular-builders/custom-webpack to 16
+[2026-01-29 16:28:50]   → npm install @angular-builders/custom-webpack@16 --save-dev --legacy-peer-deps
+npm warn deprecated read-package-json@6.0.4: This package is no longer supported. Please use @npmcli/package-json instead.
+npm warn deprecated @npmcli/move-file@2.0.1: This functionality has been moved to @npmcli/fs
+npm warn deprecated @babel/plugin-proposal-unicode-property-regex@7.18.6: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-unicode-property-regex instead.
+npm warn deprecated @babel/plugin-proposal-optional-catch-binding@7.18.6: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-optional-catch-binding instead.
+npm warn deprecated @babel/plugin-proposal-numeric-separator@7.18.6: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-numeric-separator instead.
+npm warn deprecated @babel/plugin-proposal-export-namespace-from@7.18.9: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-export-namespace-from instead.
+npm warn deprecated @babel/plugin-proposal-private-methods@7.18.6: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-private-methods instead.
+npm warn deprecated @babel/plugin-proposal-json-strings@7.18.6: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-json-strings instead.
+npm warn deprecated @babel/plugin-proposal-nullish-coalescing-operator@7.18.6: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-nullish-coalescing-operator instead.
+npm warn deprecated @babel/plugin-proposal-dynamic-import@7.18.6: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-dynamic-import instead.
+npm warn deprecated @babel/plugin-proposal-class-properties@7.18.6: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-class-properties instead.
+npm warn deprecated npmlog@6.0.2: This package is no longer supported.
+npm warn deprecated @babel/plugin-proposal-class-static-block@7.21.0: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-class-static-block instead.
+npm warn deprecated @babel/plugin-proposal-logical-assignment-operators@7.20.7: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-logical-assignment-operators instead.
+npm warn deprecated whatwg-encoding@1.0.5: Use @exodus/bytes instead for a more spec-conformant and faster implementation
+npm warn deprecated abab@2.0.6: Use your platform's native atob() and btoa() methods instead
+npm warn deprecated @babel/plugin-proposal-optional-chaining@7.21.0: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-optional-chaining instead.
+npm warn deprecated @babel/plugin-proposal-async-generator-functions@7.20.7: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-async-generator-functions instead.
+npm warn deprecated @babel/plugin-proposal-private-property-in-object@7.21.11: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-private-property-in-object instead.
+npm warn deprecated acorn-import-assertions@1.9.0: package has been renamed to acorn-import-attributes
+npm warn deprecated are-we-there-yet@3.0.1: This package is no longer supported.
+npm warn deprecated glob@8.1.0: Glob versions prior to v9 are no longer supported
+npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm warn deprecated domexception@2.0.1: Use your platform's native DOMException instead
+npm warn deprecated @babel/plugin-proposal-object-rest-spread@7.20.7: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-object-rest-spread instead.
+npm warn deprecated w3c-hr-time@1.0.2: Use your platform's native performance.now() and performance.timeOrigin.
+npm warn deprecated gauge@4.0.4: This package is no longer supported.
+npm warn deprecated @wessberg/ts-evaluator@0.0.27: this package has been renamed to ts-evaluator. Please install ts-evaluator instead
+
+added 338 packages, removed 190 packages, changed 211 packages, and audited 1270 packages in 20s
+
+181 packages are looking for funding
+  run `npm fund` for details
+
+25 vulnerabilities (3 low, 6 moderate, 16 high)
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+✓ Updating @angular-builders/custom-webpack to 16 completed
+
+--- Step 2: Run Angular Update Schematics ---
+
+[2026-01-29 16:29:10] Running: npx ng update @angular/core@16 @angular/cli@16 --force --allow-dirty
+Repository is not clean. Update changes will be mixed with pre-existing changes.
+The installed Angular CLI version is outdated.
+Installing a temporary Angular CLI versioned 16.2.16 to perform the update.
+- Installing packages...
+✔ Packages successfully installed.
+Repository is not clean. Update changes will be mixed with pre-existing changes.
+Using package manager: npm
+Collecting installed dependencies...
+Found 34 dependencies.
+Fetching dependency metadata from registry...
+    Updating package.json with dependency @angular-devkit/build-angular @ "16.2.16" (was "15.2.11")...
+    Updating package.json with dependency @angular/cli @ "16.2.16" (was "15.2.11")...
+    Updating package.json with dependency @angular/compiler-cli @ "16.2.12" (was "15.2.10")...
+    Updating package.json with dependency @angular/animations @ "16.2.12" (was "15.2.10")...
+    Updating package.json with dependency @angular/common @ "16.2.12" (was "15.2.10")...
+    Updating package.json with dependency @angular/compiler @ "16.2.12" (was "15.2.10")...
+    Updating package.json with dependency @angular/core @ "16.2.12" (was "15.2.10")...
+    Updating package.json with dependency @angular/forms @ "16.2.12" (was "15.2.10")...
+    Updating package.json with dependency @angular/platform-browser @ "16.2.12" (was "15.2.10")...
+    Updating package.json with dependency @angular/platform-browser-dynamic @ "16.2.12" (was "15.2.10")...
+    Updating package.json with dependency @angular/router @ "16.2.12" (was "15.2.10")...
+    Updating package.json with dependency zone.js @ "0.13.3" (was "0.12.0")...
+UPDATE package.json (2492 bytes)
+- Installing packages...
+✔ Packages successfully installed.
+** Executing migrations of package '@angular/cli' **
+
+❯ Remove 'defaultProject' option from workspace configuration.
+  The project to use will be determined from the current working directory.
+  Migration completed (No changes made).
+
+❯ Replace removed 'defaultCollection' option in workspace configuration with 'schematicCollections'.
+  Migration completed (No changes made).
+
+❯ Update the '@angular-devkit/build-angular:server' builder configuration to disable 'buildOptimizer' for non optimized builds.
+  Migration completed (No changes made).
+
+** Executing migrations of package '@angular/core' **
+
+❯ In Angular version 15.2, the guard and resolver interfaces (CanActivate, Resolve, etc) were deprecated.
+  This migration removes imports and 'implements' clauses that contain them.
+  Migration completed (No changes made).
+
+❯ As of Angular v16, the `moduleId` property of `@Component` is deprecated as it no longer has any effect.
+  Migration completed (No changes made).
+
+✓ Angular schematics completed
+
+--- Step 3: Update TypeScript ---
+
+[2026-01-29 16:29:59] Updating TypeScript to ~5.1.0
+[2026-01-29 16:29:59]   → npm install typescript@~5.1.0 --save-dev --legacy-peer-deps
+
+removed 1 package, changed 1 package, and audited 1154 packages in 2s
+
+164 packages are looking for funding
+  run `npm fund` for details
+
+24 vulnerabilities (3 low, 6 moderate, 15 high)
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+✓ Updating TypeScript to ~5.1.0 completed
+
+--- Step 4: Update Zone.js ---
+
+[2026-01-29 16:30:01] Updating Zone.js to ~0.13.0
+[2026-01-29 16:30:01]   → npm install zone.js@~0.13.0 --legacy-peer-deps
+
+up to date, audited 1154 packages in 2s
+
+164 packages are looking for funding
+  run `npm fund` for details
+
+24 vulnerabilities (3 low, 6 moderate, 15 high)
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+✓ Updating Zone.js to ~0.13.0 completed
+
+--- Step 5: Resolve Dependencies ---
+
+
+added 1 package, and audited 1155 packages in 2s
+
+164 packages are looking for funding
+  run `npm fund` for details
+
+32 vulnerabilities (3 low, 5 moderate, 24 high)
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+✓ Dependencies resolved
+
+--- Step 6: Verify Build ---
+
+- Generating browser application bundles (phase: setup)...
+✔ Browser application bundle generation complete.
+✔ Browser application bundle generation complete.
+- Copying assets...
+✔ Copying assets complete.
+- Generating index html...
+✔ Index html generation complete.
+
+Warning: /Users/dragan/Documents/angularV15/amsterdam-bike-fleet/node_modules/@deck.gl/layers/dist/solid-polygon-layer/polygon.js depends on 'earcut'. CommonJS or AMD dependencies can cause optimization bailouts.
+For more info see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+Warning: /Users/dragan/Documents/angularV15/amsterdam-bike-fleet/src/app/components/fleet-map/fleet-map.component.ts depends on 'maplibre-gl'. CommonJS or AMD dependencies can cause optimization bailouts.
+For more info see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+
+✓ Build verification PASSED for Angular 16
+[2026-01-29 16:30:24] Verifying Angular package versions...
+✓ All Angular packages at version 16
+✓ Migration to Angular 16 complete!
+
+═══════════════════════════════════════════════════════════════════
+  MIGRATING TO ANGULAR 17
+═══════════════════════════════════════════════════════════════════
+
+✓ Created backup branch: pre-angular-17-migration
+[2026-01-29 16:30:26] Key changes in Angular 17:
+
+  • New control flow: @if, @for, @switch
+  • Deferrable views: @defer
+  • Signals become stable
+  • esbuild-based builder as default
+  
+
+
+--- Step 1: Update Third-Party Builders ---
+
+[2026-01-29 16:30:26] Updating @angular-builders/custom-webpack to 17
+[2026-01-29 16:30:26]   → npm install @angular-builders/custom-webpack@17 --save-dev --legacy-peer-deps
+
+added 89 packages, removed 3 packages, changed 1 package, and audited 1241 packages in 7s
+
+177 packages are looking for funding
+  run `npm fund` for details
+
+25 vulnerabilities (3 low, 7 moderate, 15 high)
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+✓ Updating @angular-builders/custom-webpack to 17 completed
+
+--- Step 2: Run Angular Update Schematics ---
+
+[2026-01-29 16:30:34] Running: npx ng update @angular/core@17 @angular/cli@17 --force --allow-dirty
+Repository is not clean. Update changes will be mixed with pre-existing changes.
+The installed Angular CLI version is outdated.
+Installing a temporary Angular CLI versioned 17.3.17 to perform the update.
+- Installing packages...
+✔ Packages successfully installed.
+Repository is not clean. Update changes will be mixed with pre-existing changes.
+Using package manager: npm
+Collecting installed dependencies...
+Found 34 dependencies.
+Fetching dependency metadata from registry...
+    Updating package.json with dependency @angular-devkit/build-angular @ "17.3.17" (was "16.2.16")...
+    Updating package.json with dependency @angular/cli @ "17.3.17" (was "16.2.16")...
+    Updating package.json with dependency @angular/compiler-cli @ "17.3.12" (was "16.2.12")...
+    Updating package.json with dependency typescript @ "5.4.5" (was "5.1.6")...
+    Updating package.json with dependency @angular/animations @ "17.3.12" (was "16.2.12")...
+    Updating package.json with dependency @angular/common @ "17.3.12" (was "16.2.12")...
+    Updating package.json with dependency @angular/compiler @ "17.3.12" (was "16.2.12")...
+    Updating package.json with dependency @angular/core @ "17.3.12" (was "16.2.12")...
+    Updating package.json with dependency @angular/forms @ "17.3.12" (was "16.2.12")...
+    Updating package.json with dependency @angular/platform-browser @ "17.3.12" (was "16.2.12")...
+    Updating package.json with dependency @angular/platform-browser-dynamic @ "17.3.12" (was "16.2.12")...
+    Updating package.json with dependency @angular/router @ "17.3.12" (was "16.2.12")...
+    Updating package.json with dependency zone.js @ "0.14.10" (was "0.13.3")...
+UPDATE package.json (2493 bytes)
+- Installing packages...
+✔ Packages successfully installed.
+** Executing migrations of package '@angular/cli' **
+
+❯ Replace usages of '@nguniversal/builders' with '@angular-devkit/build-angular'.
+  Migration completed (No changes made).
+
+❯ Replace usages of '@nguniversal/' packages with '@angular/ssr'.
+  Migration completed (No changes made).
+
+❯ Replace deprecated options in 'angular.json'.
+UPDATE angular.json (4815 bytes)
+  Migration completed (1 file modified).
+
+❯ Add 'browser-sync' as dev dependency when '@angular-devkit/build-angular:ssr-dev-server' is used, as it is no longer a direct dependency of '@angular-devkit/build-angular'.
+  Migration completed (No changes made).
+
+** Executing migrations of package '@angular/core' **
+
+❯ Angular v17 introduces a new control flow syntax that uses the @ and } characters.
+  This migration replaces the existing usages with their corresponding HTML entities.
+  Migration completed (No changes made).
+
+❯ Updates `TransferState`, `makeStateKey`, `StateKey` imports from `@angular/platform-browser` to `@angular/core`.
+  Migration completed (No changes made).
+
+❯ CompilerOption.useJit and CompilerOption.missingTranslation are unused under Ivy.
+  This migration removes their usage
+  Migration completed (No changes made).
+
+❯ Updates two-way bindings that have an invalid expression to use the longform expression instead.
+  Migration completed (No changes made).
+
+✓ Angular schematics completed
+
+--- Step 3: Update TypeScript ---
+
+[2026-01-29 16:31:11] Updating TypeScript to ~5.2.0
+[2026-01-29 16:31:11]   → npm install typescript@~5.2.0 --save-dev --legacy-peer-deps
+
+changed 1 package, and audited 1045 packages in 2s
+
+163 packages are looking for funding
+  run `npm fund` for details
+
+24 vulnerabilities (3 low, 6 moderate, 15 high)
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+✓ Updating TypeScript to ~5.2.0 completed
+
+--- Step 4: Update Zone.js ---
+
+[2026-01-29 16:31:13] Updating Zone.js to ~0.14.0
+[2026-01-29 16:31:13]   → npm install zone.js@~0.14.0 --legacy-peer-deps
+
+up to date, audited 1045 packages in 2s
+
+163 packages are looking for funding
+  run `npm fund` for details
+
+24 vulnerabilities (3 low, 6 moderate, 15 high)
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+✓ Updating Zone.js to ~0.14.0 completed
+
+--- Step 5: Resolve Dependencies ---
+
+
+up to date, audited 1045 packages in 2s
+
+163 packages are looking for funding
+  run `npm fund` for details
+
+33 vulnerabilities (3 low, 6 moderate, 24 high)
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+✓ Dependencies resolved
+
+--- Step 6: Verify Build ---
+
+- Generating browser application bundles (phase: setup)...
+✔ Browser application bundle generation complete.
+✔ Browser application bundle generation complete.
+- Copying assets...
+✔ Copying assets complete.
+- Generating index html...
+✔ Index html generation complete.
+
+Warning: /Users/dragan/Documents/angularV15/amsterdam-bike-fleet/node_modules/@deck.gl/layers/dist/solid-polygon-layer/polygon.js depends on 'earcut'. CommonJS or AMD dependencies can cause optimization bailouts.
+For more info see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+Warning: /Users/dragan/Documents/angularV15/amsterdam-bike-fleet/src/app/components/fleet-map/fleet-map.component.ts depends on 'maplibre-gl'. CommonJS or AMD dependencies can cause optimization bailouts.
+For more info see: https://angular.io/guide/build#configuring-commonjs-dependencies
+
+
+✓ Build verification PASSED for Angular 17
+[2026-01-29 16:31:32] Verifying Angular package versions...
+✓ All Angular packages at version 17
+✓ Migration to Angular 17 complete!
+
+═══════════════════════════════════════════════════════════════════
+  MIGRATING TO ANGULAR 18
+═══════════════════════════════════════════════════════════════════
+
+✓ Created backup branch: pre-angular-18-migration
+[2026-01-29 16:31:34] Key changes in Angular 18:
+
+  • Zoneless change detection (experimental)
+  • Signal-based inputs, outputs, queries (stable)
+  • @let template syntax
+  • Fallback content for ng-content
+  
+
+
+--- Step 1: Update Third-Party Builders ---
+
+[2026-01-29 16:31:34] Updating @angular-builders/custom-webpack to 18
+[2026-01-29 16:31:34]   → npm install @angular-builders/custom-webpack@18 --save-dev --legacy-peer-deps
+npm warn deprecated critters@0.0.24: Ownership of Critters has moved to the Nuxt team, who will be maintaining the project going forward. If you'd like to keep using Critters, please switch to the actively-maintained fork at https://github.com/danielroe/beasties
+npm warn deprecated critters@0.0.24: Ownership of Critters has moved to the Nuxt team, who will be maintaining the project going forward. If you'd like to keep using Critters, please switch to the actively-maintained fork at https://github.com/danielroe/beasties
+
+added 176 packages, changed 3 packages, and audited 1221 packages in 11s
+
+229 packages are looking for funding
+  run `npm fund` for details
+
+25 vulnerabilities (3 low, 7 moderate, 15 high)
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+✓ Updating @angular-builders/custom-webpack to 18 completed
+
+--- Step 2: Run Angular Update Schematics ---
+
+[2026-01-29 16:31:44] Running: npx ng update @angular/core@18 @angular/cli@18 --force --allow-dirty
+Repository is not clean. Update changes will be mixed with pre-existing changes.
+The installed Angular CLI version is outdated.
+Installing a temporary Angular CLI versioned 18.2.21 to perform the update.
+- Installing packages...
+✔ Packages successfully installed.
+Repository is not clean. Update changes will be mixed with pre-existing changes.
+Using package manager: npm
+Collecting installed dependencies...
+Found 34 dependencies.
+Fetching dependency metadata from registry...
+    Updating package.json with dependency @angular-devkit/build-angular @ "18.2.21" (was "17.3.17")...
+    Updating package.json with dependency @angular/cli @ "18.2.21" (was "17.3.17")...
+    Updating package.json with dependency @angular/compiler-cli @ "18.2.14" (was "17.3.12")...
+    Updating package.json with dependency typescript @ "5.5.4" (was "5.2.2")...
+    Updating package.json with dependency @angular/animations @ "18.2.14" (was "17.3.12")...
+    Updating package.json with dependency @angular/common @ "18.2.14" (was "17.3.12")...
+    Updating package.json with dependency @angular/compiler @ "18.2.14" (was "17.3.12")...
+    Updating package.json with dependency @angular/core @ "18.2.14" (was "17.3.12")...
+    Updating package.json with dependency @angular/forms @ "18.2.14" (was "17.3.12")...
+    Updating package.json with dependency @angular/platform-browser @ "18.2.14" (was "17.3.12")...
+    Updating package.json with dependency @angular/platform-browser-dynamic @ "18.2.14" (was "17.3.12")...
+    Updating package.json with dependency @angular/router @ "18.2.14" (was "17.3.12")...
+UPDATE package.json (2494 bytes)
+❯ Cleaning node modules directory
+✔ Cleaning node modules directory
+❯ Installing packages
+✔ Installing packages
+** Optional migrations of package '@angular/cli' **
+
+This package has 1 optional migration that can be executed.
+❯ Migrate application projects to the new build system.
+  ng update @angular/cli --name use-application-builder
+
+** Executing migrations of package '@angular/core' **
+
+❯ Updates two-way bindings that have an invalid expression to use the longform expression instead.
+  Migration completed (No changes made).
+
+❯ Replace deprecated HTTP related modules with provider functions.
+UPDATE src/app/interceptors/mock-api.interceptor.ts (10065 bytes)
+UPDATE src/app/app.module.ts (1920 bytes)
+  Migration completed (2 files modified).
+
+❯ Updates calls to afterRender with an explicit phase to the new API.
+  Migration completed (No changes made).
+
+❯ Adds `BootstrapContext` to `bootstrapApplication` calls in `main.server.ts` to support server rendering.
+  Migration completed (No changes made).
+
+✓ Angular schematics completed
+
+--- Step 3: Update TypeScript ---
+
+[2026-01-29 16:32:22] Updating TypeScript to ~5.4.0
+[2026-01-29 16:32:22]   → npm install typescript@~5.4.0 --save-dev --legacy-peer-deps
+
+changed 1 package, and audited 1103 packages in 2s
+
+208 packages are looking for funding
+  run `npm fund` for details
+
+24 vulnerabilities (4 low, 5 moderate, 15 high)
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+✓ Updating TypeScript to ~5.4.0 completed
+
+--- Step 4: Update Zone.js ---
+
+[2026-01-29 16:32:24] Updating Zone.js to ~0.14.0
+[2026-01-29 16:32:24]   → npm install zone.js@~0.14.0 --legacy-peer-deps
+
+up to date, audited 1103 packages in 2s
+
+208 packages are looking for funding
+  run `npm fund` for details
+
+24 vulnerabilities (4 low, 5 moderate, 15 high)
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+✓ Updating Zone.js to ~0.14.0 completed
+
+--- Step 5: Resolve Dependencies ---
+
+
+up to date, audited 1103 packages in 3s
+
+208 packages are looking for funding
+  run `npm fund` for details
+
+33 vulnerabilities (5 low, 3 moderate, 25 high)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+✓ Dependencies resolved
+
+--- Step 6: Verify Build ---
+
+- Generating browser application bundles (phase: setup)...
+✔ Browser application bundle generation complete.
+✔ Browser application bundle generation complete.
+- Copying assets...
+✔ Copying assets complete.
+- Generating index html...
+✔ Index html generation complete.
+
+Warning: /Users/dragan/Documents/angularV15/amsterdam-bike-fleet/node_modules/@deck.gl/layers/dist/solid-polygon-layer/polygon.js depends on 'earcut'. CommonJS or AMD dependencies can cause optimization bailouts.
+For more info see: https://angular.dev/tools/cli/build#configuring-commonjs-dependencies
+
+Warning: /Users/dragan/Documents/angularV15/amsterdam-bike-fleet/src/app/components/fleet-map/fleet-map.component.ts depends on 'maplibre-gl'. CommonJS or AMD dependencies can cause optimization bailouts.
+For more info see: https://angular.dev/tools/cli/build#configuring-commonjs-dependencies
+
+
+✓ Build verification PASSED for Angular 18
+[2026-01-29 16:32:46] Verifying Angular package versions...
+✓ All Angular packages at version 18
+✓ Migration to Angular 18 complete!
+
+═══════════════════════════════════════════════════════════════════
+  CHECKING FOR DEPRECATED PATTERNS
+═══════════════════════════════════════════════════════════════════
+
+[2026-01-29 16:32:48] Scanning source code for patterns that may need updates...
+[2026-01-29 16:32:48] Checking for class-based route guards...
+✓ No class-based guards found
+[2026-01-29 16:32:48] Checking for ComponentFactoryResolver...
+✓ No ComponentFactoryResolver found
+[2026-01-29 16:32:48] Checking for deprecated RxJS patterns...
+✓ No deprecated RxJS patterns found
+[2026-01-29 16:32:48] Checking for untyped reactive forms...
+✓ No untyped forms issues found
+[2026-01-29 16:32:48] Checking for CommonJS patterns...
+✓ No CommonJS patterns found
+[2026-01-29 16:32:48] Checking for structural directives...
+⚠ Found 58 *ngIf and 11 *ngFor usages
+⚠   Consider migrating to @if/@for with: ng g @angular/core:control-flow
+
+[2026-01-29 16:32:49] Optional Angular 18 modernizations:
+  • New control flow: @if/@for instead of *ngIf/*ngFor
+  • Signal inputs: input<T>() instead of @Input()
+  • Signal outputs: output<T>() instead of @Output()
+  • takeUntilDestroyed() from @angular/core/rxjs-interop
+  • Standalone components: ng g @angular/core:standalone
+  • Control flow migration: ng g @angular/core:control-flow
+
+✓ No critical issues found!
+
+═══════════════════════════════════════════════════════════════════
+  FINALIZING MIGRATION
+═══════════════════════════════════════════════════════════════════
+
+[2026-01-29 16:32:49] Checking for remaining updates...
+Using package manager: npm
+Collecting installed dependencies...
+Found 34 dependencies.
+    We analyzed your package.json, there are some packages to update:
+    
+      Name                               Version                  Command to update
+     --------------------------------------------------------------------------------
+      @angular/cli                       18.2.21 -> 19.2.9        ng update @angular/cli@19
+      @angular/core                      18.2.14 -> 19.2.9        ng update @angular/core@19
+    
+    There might be additional packages which don't provide 'ng update' capabilities that are outdated.
+    You can update the additional packages by running the update command of your package manager.
+
+--- Final Clean Install ---
+
+
+--- Clean Install ---
+
+[2026-01-29 16:32:50] Removing node_modules and lockfile
+[2026-01-29 16:32:50]   → rm -rf node_modules package-lock.json
+✓ Removing node_modules and lockfile completed
+[2026-01-29 16:32:59] Fresh npm install (attempt 1/3)
+npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm warn deprecated critters@0.0.24: Ownership of Critters has moved to the Nuxt team, who will be maintaining the project going forward. If you'd like to keep using Critters, please switch to the actively-maintained fork at https://github.com/danielroe/beasties
+npm warn deprecated tar@6.2.1: Old versions of tar are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exhorbitant rates) by contacting i@izs.me
+
+added 1121 packages, and audited 1122 packages in 43s
+
+209 packages are looking for funding
+  run `npm fund` for details
+
+33 vulnerabilities (5 low, 3 moderate, 25 high)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+✓ Fresh npm install completed
+
+--- Production Build Verification ---
+
+- Generating browser application bundles (phase: setup)...
+✔ Browser application bundle generation complete.
+✔ Browser application bundle generation complete.
+- Copying assets...
+✔ Copying assets complete.
+- Generating index html...
+✔ Index html generation complete.
+
+Warning: /Users/dragan/Documents/angularV15/amsterdam-bike-fleet/node_modules/@deck.gl/layers/dist/solid-polygon-layer/polygon.js depends on 'earcut'. CommonJS or AMD dependencies can cause optimization bailouts.
+For more info see: https://angular.dev/tools/cli/build#configuring-commonjs-dependencies
+
+Warning: /Users/dragan/Documents/angularV15/amsterdam-bike-fleet/src/app/components/fleet-map/fleet-map.component.ts depends on 'maplibre-gl'. CommonJS or AMD dependencies can cause optimization bailouts.
+For more info see: https://angular.dev/tools/cli/build#configuring-commonjs-dependencies
+
+Warning: /Users/dragan/Documents/angularV15/amsterdam-bike-fleet/src/app/components/license-dialog/license-dialog.component.scss exceeded maximum budget. Budget 6.14 kB was not met by 9 bytes with a total of 6.15 kB.
+
+Warning: bundle initial exceeded maximum budget. Budget 2.10 MB was not met by 940.92 kB with a total of 3.04 MB.
+
+
+✓ Production build PASSED!
+
+═══════════════════════════════════════════════════════════════════
+  MIGRATION COMPLETE! 🎉
+═══════════════════════════════════════════════════════════════════
+
+✓ Full log: /Users/dragan/Documents/angularV15/amsterdam-bike-fleet/angular-migration-20260129-162850.log

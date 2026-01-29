@@ -1,13 +1,14 @@
 <nav class="nav-tabs">
   <div class="nav-tabs-left">
-    <a
-      *ngFor="let tab of tabs"
-      [routerLink]="tab.route"
-      routerLinkActive="active"
-      class="nav-tab"
-    >
-      {{ tab.label }}
-    </a>
+    @for (tab of tabs; track tab) {
+      <a
+        [routerLink]="tab.route"
+        routerLinkActive="active"
+        class="nav-tab"
+        >
+        {{ tab.label }}
+      </a>
+    }
   </div>
   <div class="nav-tabs-right">
     <app-license-badge (openLicenseDialog)="openLicenseDialog()"></app-license-badge>

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { ForceGraphComponent } from '../force-graph/force-graph.component';
 import { TauriService, Bike, ForceNode } from '../../services/tauri.service';
 
@@ -23,7 +23,7 @@ import { TauriService, Bike, ForceNode } from '../../services/tauri.service';
 @Component({
   selector: 'app-deliverer-graph-page',
   standalone: true,
-  imports: [CommonModule, ForceGraphComponent],
+  imports: [ForceGraphComponent],
   templateUrl: './deliverer-graph-page.component.html',
   styleUrls: ['./deliverer-graph-page.component.scss'],
 })

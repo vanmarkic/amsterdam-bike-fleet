@@ -2,11 +2,12 @@
   <h2>Bike Fleet</h2>
 
   <div class="bike-list">
-    <app-bike-list-item
-      *ngFor="let bike of bikes; trackBy: trackByBikeId"
-      [bike]="bike"
-      [isSelected]="selectedBikeId === bike.id"
-      (bikeSelected)="onBikeSelected($event)">
-    </app-bike-list-item>
+    @for (bike of bikes; track trackByBikeId($index, bike)) {
+      <app-bike-list-item
+        [bike]="bike"
+        [isSelected]="selectedBikeId === bike.id"
+        (bikeSelected)="onBikeSelected($event)">
+      </app-bike-list-item>
+    }
   </div>
 </div>

@@ -10,7 +10,7 @@ import {
   SimpleChanges,
   ViewChild,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import {
   ForceNode,
   ForceLink,
@@ -43,7 +43,7 @@ import {
 @Component({
   selector: 'app-force-graph',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './force-graph.component.html',
   styleUrls: ['./force-graph.component.scss'],
 })

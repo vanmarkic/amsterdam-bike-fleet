@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
 import { Delivery, DeliveryStatus } from '../../models/fleet.models';
@@ -10,7 +10,7 @@ type FilterStatus = 'all' | DeliveryStatus;
 @Component({
   selector: 'app-deliveries-page',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './deliveries-page.component.html',
   styleUrls: ['./deliveries-page.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
