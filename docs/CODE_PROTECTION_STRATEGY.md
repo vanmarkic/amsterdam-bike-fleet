@@ -99,11 +99,17 @@ The strongest protection comes from **architectural decisions**, not tool choice
 │                              │                                   │
 │                              ▼                                   │
 │   ┌─────────────────────────────────────────────────────────┐   │
-│   │              LAYER 4: ENCRYPTED DATABASE                 │   │
+│   │              LAYER 4: DATABASE (SQLite or PostgreSQL)    │   │
 │   │                                                          │   │
-│   │   • SQLite + SQLCipher encryption                        │   │
+│   │   SQLite (default - standalone desktop):                 │   │
+│   │   • SQLCipher encryption                                 │   │
 │   │   • Key compiled into Rust binary                        │   │
 │   │   • Schema hidden in compiled code                       │   │
+│   │                                                          │   │
+│   │   PostgreSQL (--features postgres - on-premise HA):      │   │
+│   │   • Patroni + etcd for automatic failover                │   │
+│   │   • Connection pooling via deadpool-postgres             │   │
+│   │   • 99.99% uptime with 3-node cluster                    │   │
 │   └─────────────────────────────────────────────────────────┘   │
 │                                                                  │
 └─────────────────────────────────────────────────────────────────┘
@@ -135,12 +141,21 @@ We recommend **Tauri** over Electron for several reasons:
 | Code protection | Poor | Excellent (Rust portions) |
 | Startup time | Slow | Fast |
 
-### Database: SQLite + SQLCipher
+### Database: SQLite or PostgreSQL
 
+**SQLite + SQLCipher (default - standalone desktop):**
 - **Embedded**: No external database server required
 - **Encrypted**: SQLCipher provides AES-256 encryption
 - **Fast**: Single-file database with excellent performance
 - **Portable**: Database file stored in user's AppData
+
+**PostgreSQL (--features postgres - on-premise HA deployments):**
+- **High Availability**: Patroni + etcd for automatic failover (99.99% uptime)
+- **Connection Pooling**: deadpool-postgres for efficient connections
+- **Backup**: pgBackRest for point-in-time recovery
+- **Scaling**: Suitable for multi-user enterprise deployments
+
+Build with: `cargo build --release --no-default-features --features postgres`
 
 ### Frontend Protection: Multi-Layer
 

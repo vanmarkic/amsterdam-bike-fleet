@@ -70,13 +70,16 @@ amsterdam-bike-fleet/
 │   │   ├── main.rs             # Main entry point
 │   │   ├── lib.rs              # Library with Tauri setup
 │   │   ├── models.rs           # Data models
-│   │   ├── database.rs         # SQLite database operations
+│   │   ├── database.rs         # SQLite database operations (default)
+│   │   ├── database_pg.rs      # PostgreSQL operations (--features postgres)
 │   │   └── commands/           # Tauri command handlers
 │   │       ├── mod.rs
-│   │       ├── fleet.rs        # Fleet management commands
-│   │       ├── database.rs     # Database commands
+│   │       ├── fleet.rs        # Fleet commands (SQLite)
+│   │       ├── fleet_pg.rs     # Fleet commands (PostgreSQL)
+│   │       ├── database.rs     # Database commands (SQLite)
+│   │       ├── database_pg.rs  # Database commands (PostgreSQL)
 │   │       └── health.rs       # Health check commands
-│   ├── Cargo.toml              # Rust dependencies
+│   ├── Cargo.toml              # Rust dependencies (sqlite/postgres features)
 │   ├── tauri.conf.json         # Tauri configuration
 │   └── icons/                  # Application icons
 └── package.json
@@ -262,13 +265,39 @@ export class AppComponent implements OnInit {
 
 ## Database
 
-The application uses SQLite for local data storage. The database is stored at:
+The application supports two database backends:
+
+### SQLite (Default)
+
+SQLite is used by default for standalone desktop deployments. The database is stored at:
 
 - **macOS:** `~/Library/Application Support/com.amsterdam-bike-fleet.app/amsterdam_bike_fleet.db`
 - **Windows:** `C:\Users\<USER>\AppData\Roaming\com.amsterdam-bike-fleet.app\amsterdam_bike_fleet.db`
 - **Linux:** `~/.local/share/com.amsterdam-bike-fleet.app/amsterdam_bike_fleet.db`
 
 On first run, the database is automatically initialized with mock Amsterdam bike data.
+
+### PostgreSQL (On-Premise HA)
+
+For enterprise deployments requiring high availability, the app can be built with PostgreSQL support:
+
+```bash
+cd src-tauri
+cargo build --release --no-default-features --features postgres
+```
+
+Configure via environment variables:
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `PG_HOST` | PostgreSQL host or HAProxy VIP | localhost |
+| `PG_PORT` | PostgreSQL port | 5432 |
+| `PG_USER` | Database user | fleet_app |
+| `PG_PASSWORD` | Database password | (required) |
+| `PG_DATABASE` | Database name | bike_fleet |
+| `PG_POOL_SIZE` | Connection pool size | 16 |
+
+See [On-Premise HA Setup](docs/ON_PREMISE_HA_SETUP.md) for complete deployment guide with Patroni, etcd, and HAProxy for 99.99% uptime.
 
 ## Application Icons
 

@@ -156,7 +156,7 @@ Extends Phase 1 to tie licenses to specific customer domains.
 │                                                              │
 │  Layer 3: Rust Backend                           [✅ Done]   │
 │  └── Business logic compiled to native machine code         │
-│  └── SQLite database operations                             │
+│  └── SQLite (default) or PostgreSQL (--features postgres)   │
 │                                                              │
 │  Layer 2: WASM Module                            [✅ Done]   │
 │  └── Client-side algorithms in WebAssembly binary           │
@@ -742,6 +742,12 @@ cargo run -- \
 - [OBFUSCATION.md](./OBFUSCATION.md) - JavaScript obfuscation details
 - [WASM_SETUP.md](./WASM_SETUP.md) - WebAssembly module setup
 - [../TAURI_SETUP.md](../TAURI_SETUP.md) - Tauri desktop app setup
+
+### On-Premise HA Deployment
+- [ON_PREMISE_HA_SETUP.md](./ON_PREMISE_HA_SETUP.md) - Complete HA deployment guide
+- [POSTGRESQL_HA_DEPLOYMENT.md](./POSTGRESQL_HA_DEPLOYMENT.md) - Patroni + etcd cluster setup
+- [BACKUP_RECOVERY.md](./BACKUP_RECOVERY.md) - pgBackRest backup strategy
+- [INFRASTRUCTURE_DECISIONS.md](./INFRASTRUCTURE_DECISIONS.md) - Architecture rationale
 
 ---
 

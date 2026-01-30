@@ -14,19 +14,26 @@ Key insight: **GUI framework choice (Qt, WinUI, etc.) does NOT provide code prot
 **Files created:**
 ```
 src-tauri/
-├── Cargo.toml              # Rust dependencies
+├── Cargo.toml              # Rust dependencies (sqlite/postgres features)
 ├── tauri.conf.json         # Tauri configuration
 ├── icons/                  # App icons (auto-generated)
 └── src/
     ├── main.rs             # Entry point
     ├── lib.rs              # Tauri command registration
     ├── models.rs           # Data structures
-    ├── database.rs         # SQLite operations
+    ├── database.rs         # SQLite operations (default)
+    ├── database_pg.rs      # PostgreSQL operations (--features postgres)
     └── commands/           # IPC command handlers
-        ├── fleet.rs
-        ├── database.rs
+        ├── fleet.rs        # SQLite fleet commands
+        ├── fleet_pg.rs     # PostgreSQL fleet commands
+        ├── database.rs     # SQLite database commands
+        ├── database_pg.rs  # PostgreSQL database commands
         └── health.rs
 ```
+
+**Database backends:**
+- **SQLite** (default): Embedded, zero-config, ideal for standalone desktop
+- **PostgreSQL** (`--features postgres`): For on-premise HA deployments with Patroni
 
 **Protection level:** ⭐⭐⭐⭐⭐ (Rust compiles to native machine code)
 
@@ -96,9 +103,24 @@ Push to GitHub → Actions tab → Download artifacts:
 | `npm run build` | Production web build |
 | `npm run build:protected` | Obfuscated web build |
 | `npm run wasm:build` | Build WASM module |
-| `npm run tauri:dev` | Desktop app (dev mode) |
-| `npm run tauri:build` | Desktop app (production) |
+| `npm run tauri:dev` | Desktop app (dev mode, SQLite) |
+| `npm run tauri:build` | Desktop app (production, SQLite) |
 | `npm run tauri:build:protected` | Desktop app + obfuscation |
+
+**PostgreSQL Build (On-Premise HA):**
+
+```bash
+cd src-tauri
+cargo build --release --no-default-features --features postgres
+```
+
+Environment variables for PostgreSQL:
+- `PG_HOST` - PostgreSQL host or HAProxy VIP
+- `PG_PORT` - PostgreSQL port (default: 5432)
+- `PG_USER` - Database user
+- `PG_PASSWORD` - Database password
+- `PG_DATABASE` - Database name
+- `PG_POOL_SIZE` - Connection pool size (default: 16)
 
 ---
 
@@ -317,30 +339,40 @@ wine Amsterdam\ Bike\ Fleet_0.1.0_x64-setup.exe
 ```
 amsterdam-bike-fleet/
 ├── docs/
-│   ├── BUILD_SUMMARY.md          # This document
+│   ├── BUILD_SUMMARY.md              # This document
 │   ├── CODE_PROTECTION_STRATEGY.md
 │   ├── OBFUSCATION.md
-│   └── WASM_SETUP.md
-├── src-tauri/                    # Rust backend
-│   ├── Cargo.toml
+│   ├── WASM_SETUP.md
+│   ├── LICENSING.md
+│   ├── POSTGRESQL_HA_DEPLOYMENT.md   # PostgreSQL cluster setup
+│   ├── BACKUP_RECOVERY.md            # pgBackRest backup strategy
+│   ├── ON_PREMISE_HA_SETUP.md        # Complete HA deployment guide
+│   └── INFRASTRUCTURE_DECISIONS.md   # Architecture rationale
+├── src-tauri/                        # Rust backend
+│   ├── Cargo.toml                    # sqlite/postgres feature flags
 │   ├── tauri.conf.json
-│   ├── icons/                    # Generated app icons
+│   ├── icons/                        # Generated app icons
 │   └── src/
 │       ├── main.rs
 │       ├── lib.rs
 │       ├── models.rs
-│       ├── database.rs
+│       ├── database.rs               # SQLite (default)
+│       ├── database_pg.rs            # PostgreSQL (--features postgres)
 │       └── commands/
-├── wasm-lib/                     # WASM crate
+│           ├── fleet.rs              # SQLite commands
+│           ├── fleet_pg.rs           # PostgreSQL commands
+│           ├── database.rs           # SQLite commands
+│           └── database_pg.rs        # PostgreSQL commands
+├── wasm-lib/                         # WASM crate
 │   ├── Cargo.toml
 │   ├── src/lib.rs
-│   └── pkg/                      # Built WASM
-├── .github/workflows/build.yml   # CI/CD
+│   └── pkg/                          # Built WASM
+├── .github/workflows/build.yml       # CI/CD
 ├── obfuscator.config.js
 ├── webpack.config.js
 ├── app-icon.svg
 ├── TAURI_SETUP.md
-└── package.json                  # Updated with new scripts
+└── package.json                      # Updated with new scripts
 ```
 
 ---

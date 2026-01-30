@@ -31,6 +31,19 @@ Real-time bike courier fleet management visualization for Amsterdam, built with 
 │  • License verification                                          │
 │  • System integration                                            │
 └─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                       DATABASE BACKEND                           │
+│  SQLite (default) OR PostgreSQL (--features postgres)            │
+│  ┌─────────────────┐  ┌─────────────────────────────────────┐   │
+│  │ SQLite          │  │ PostgreSQL HA (On-Premise)          │   │
+│  │ • Standalone    │  │ • Patroni + etcd (auto-failover)    │   │
+│  │ • Embedded      │  │ • HAProxy (load balancing)          │   │
+│  │ • Zero config   │  │ • pgBackRest (backups)              │   │
+│  └─────────────────┘  │ • 99.99% uptime target              │   │
+│                       └─────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ### Why This Architecture?
@@ -84,13 +97,21 @@ amsterdam-bike-fleet/
 | UI | Angular 15 | Component architecture, change detection |
 | Logic | Rust → WASM | Protected, performant algorithms |
 | Desktop | Tauri | Native distribution, licensing |
+| Database | SQLite / PostgreSQL | Embedded (default) or HA on-premise |
 
 ## Documentation
 
+### Core Documentation
 - [WASM Setup Guide](docs/WASM_SETUP.md) - Building and using the WebAssembly module
 - [Code Protection Strategy](docs/CODE_PROTECTION_STRATEGY.md) - Security architecture rationale
 - [Licensing](docs/LICENSING.md) - License key implementation
 - [Performance](docs/PERFORMANCE_OPTIMIZATIONS.md) - Optimization techniques
+
+### On-Premise High Availability
+- [On-Premise HA Setup](docs/ON_PREMISE_HA_SETUP.md) - Complete on-premise deployment guide
+- [PostgreSQL HA Deployment](docs/POSTGRESQL_HA_DEPLOYMENT.md) - Patroni + etcd cluster setup
+- [Backup & Recovery](docs/BACKUP_RECOVERY.md) - pgBackRest backup strategy
+- [Infrastructure Decisions](docs/INFRASTRUCTURE_DECISIONS.md) - Why not Kubernetes, architecture rationale
 
 ## Development
 
@@ -113,10 +134,47 @@ npm run wasm:build    # Development build
 npm run wasm:build:release  # Optimized build
 cd wasm-lib && cargo test   # Rust tests
 
-# Tauri
+# Tauri (SQLite - default)
 npm run tauri dev     # Desktop development
 npm run tauri build   # Desktop release
+
+# Tauri (PostgreSQL - for on-premise HA)
+cd src-tauri
+cargo build --release --no-default-features --features postgres
 ```
+
+## On-Premise HA Deployment
+
+For enterprise deployments requiring **99.99% uptime**, the app supports PostgreSQL with automatic failover.
+
+### Quick Start
+
+```bash
+# 1. Build with PostgreSQL support
+cd src-tauri
+cargo build --release --no-default-features --features postgres
+
+# 2. Configure environment (point to HAProxy VIP)
+export PG_HOST=10.0.0.100    # HAProxy VIP
+export PG_PORT=5432
+export PG_USER=fleet_app
+export PG_PASSWORD=your_password
+export PG_DATABASE=bike_fleet
+
+# 3. Run the app
+./amsterdam-bike-fleet
+```
+
+### Infrastructure Components
+
+| Component | Purpose | Nodes |
+|-----------|---------|-------|
+| PostgreSQL + Patroni | Database with auto-failover | 3 |
+| etcd | Distributed consensus | 3 |
+| HAProxy | Load balancing + routing | 2 |
+| pgBackRest | Backup & recovery | 1 |
+
+See [On-Premise HA Setup](docs/ON_PREMISE_HA_SETUP.md) for complete deployment guide.
 
 ## Design Decisions
 
