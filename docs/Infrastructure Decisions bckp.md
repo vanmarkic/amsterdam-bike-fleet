@@ -57,7 +57,7 @@ Kubernetes' desired-state model means the system **continuously reconciles** any
 
 ### 3. Ecosystem Critical Mass
 
-With [**88% adoption rate**](https://www.cncf.io/reports/cncf-annual-survey-2023/) and [75% of organizations using Helm](https://www.cncf.io/reports/cncf-annual-survey-2023/), Kubernetes has achieved ecosystem dominance. Pre-built Helm charts exist for nearly every application. Kubernetes Operators encode domain-specific logic (backups, failover, upgrades) that would otherwise require custom scripting. The job market also reflects this—K8s appears in [~28% of DevOps job listings (2024)](https://www.ardanlabs.com/news/2025/how-important-is-knowing-kubernetes-in-todays-job-market/).
+With **88% adoption rate** and 75% of organizations using Helm, Kubernetes has achieved ecosystem dominance. Pre-built Helm charts exist for nearly every application. Kubernetes Operators encode domain-specific logic (backups, failover, upgrades) that would otherwise require custom scripting. The job market also reflects this—K8s appears in ~28% of DevOps job listings (2024).
 
 > *"Once a tool reaches critical mass, the ecosystem around it becomes a primary motivation to adopt it."*
 
@@ -69,7 +69,7 @@ The other side of the coin—legitimate reasons teams avoid or abandon K8s:
 
 ### 4. Operational Complexity and Debugging Nightmares
 
-[**76% of users cite Kubernetes complexity as a barrier**](https://info.spectrocloud.com/report-kubernetes-2023) to wider adoption (2024 Spectro Cloud report). Teams lose an average of [**34 workdays annually on troubleshooting**](https://komodor.com/blog/kubernetes-in-the-enterprise-2025-report/) K8s incidents alone (Komodor 2025). Debugging distributed systems is exponentially harder than `grep /var/log/syslog` on a traditional server.
+**76% of users cite Kubernetes complexity as a barrier** to wider adoption (2024 Spectro Cloud report). Teams lose an average of **34 workdays annually on troubleshooting** K8s incidents alone (Komodor 2025). Debugging distributed systems is exponentially harder than `grep /var/log/syslog` on a traditional server.
 
 **Real incident:** A junior developer's ConfigMap tweak (INFO→DEBUG) flooded node disks in 8 minutes, crashed kubelets cluster-wide, and required 45 minutes of manual SSH recovery.
 
@@ -77,12 +77,12 @@ The other side of the coin—legitimate reasons teams avoid or abandon K8s:
 
 Your cloud bill is just the tip of the iceberg:
 
-| Cost Factor | Impact | Source |
-|-------------|--------|--------|
-| Operational overhead | [~35% of total K8s spending](https://www.naviteq.io/blog/what-kubernetes-really-costs-kubernetes-cost-optimization/) | Naviteq |
-| Cloud waste from over-provisioned clusters | [$200B annually industry-wide](https://www.flexera.com/blog/finops/cloud-computing-trends-flexera-2024-state-of-the-cloud-report/) | Flexera 2024 |
-| Microservices on K8s vs monolith | [2.5-3.75x higher total cost](https://medium.com/@tusharsingla024/the-hidden-costs-of-microservices-when-a-monolithic-architecture-is-the-smarter-choice-d5d360f190bb) | Industry analysis |
-| K8s expert salaries | Premium due to scarcity | Market data |
+| Cost Factor | Impact |
+|-------------|--------|
+| Operational overhead | ~35% of total K8s spending |
+| Cloud waste from over-provisioned clusters | $200B annually industry-wide |
+| Microservices on K8s vs monolith | 2.5-3.75x higher total cost |
+| K8s expert salaries | Premium due to scarcity |
 
 **Cost comparison:**
 | Approach | Monthly Cost | Ops Hours/Month |
@@ -92,7 +92,7 @@ Your cloud bill is just the tip of the iceberg:
 
 ### 6. Resume-Driven Development and Over-Engineering
 
-[**61% of organizations plan to shrink their Kubernetes footprint**](https://www.plural.sh/blog/is-kubernetes-worth-it/) over the next 12 months. [**42% are consolidating microservices back to monoliths**](https://www.infoworld.com/article/2338421/monolith-vs-microservices-the-great-debate.html). Teams "plan to scale to 100 microservices eventually," but "eventually" never comes—meanwhile they've spent months learning K8s instead of shipping product.
+**61% of organizations plan to shrink their Kubernetes footprint** over the next 12 months. **42% are consolidating microservices back to monoliths.** Teams "plan to scale to 100 microservices eventually," but "eventually" never comes—meanwhile they've spent months learning K8s instead of shipping product.
 
 > *"When you choose boring technology, you spend less time configuring and more time shipping. You'll be shipping products while others are still configuring their YAML files."*
 
@@ -106,28 +106,28 @@ Why "boring" infrastructure often wins:
 
 The evidence is overwhelming—bare metal can save **50-97%** compared to managed cloud:
 
-- [**$12.9M annual savings case study:**](https://www.itbroker.com/podcast/bare-metal-advantage-vs-aws) Company spending $1.06M/month on AWS reduced to $50k/month on bare metal—95% reduction
-- [**$12k/month savings:**](https://medium.com/@kp9810113/kubernetes-vs-bare-metal-we-migrated-back-to-dedicated-servers-and-saved-12k-month-220ee64c7dc9) Team migrated back from K8s to dedicated servers, saving $144k annually
+- **$12.9M annual savings case study:** Company spending $1.06M/month on AWS reduced to $50k/month on bare metal—95% reduction
+- **$12k/month savings:** Team migrated back from K8s to dedicated servers, saving $144k annually
 - **Cloud egress fees eliminated:** "Cloud egress fees were eating our margins alive. Bare metal solved that day 1."
 
 ### 5. Simplicity, Debuggability, and "Boring Technology" Advantage
 
-Dan McKinley's ["Choose Boring Technology"](https://mcfunley.com/choose-boring-technology) principle: **well-understood systems have well-understood failure modes**.
+Dan McKinley's "Choose Boring Technology" principle: **well-understood systems have well-understood failure modes**.
 
 | Tool | Why It Works |
 |------|--------------|
-| **[Ansible](https://docs.ansible.com/)** | Agentless (SSH), YAML syntax, no agents to manage |
-| **[systemd](https://systemd.io/)** | Every Linux admin knows it; `journalctl` just works |
-| **[Terraform](https://www.terraform.io/)** | Declarative, works with any provider, massive ecosystem |
+| **Ansible** | Agentless (SSH), YAML syntax, no agents to manage |
+| **systemd** | Every Linux admin knows it; `journalctl` just works |
+| **Terraform** | Declarative, works with any provider, massive ecosystem |
 
-> *"Every company gets about three innovation tokens. Spending them on container orchestration when your business doesn't require it wastes capacity for where innovation actually matters."* — [Dan McKinley](https://mcfunley.com/choose-boring-technology)
+> *"Every company gets about three innovation tokens. Spending them on container orchestration when your business doesn't require it wastes capacity for where innovation actually matters."* — Dan McKinley
 
 ### 6. Security, Compliance, and Hardware Isolation
 
-Regulated industries favor bare metal for [simpler security posture](https://www.cncf.io/blog/2025/11/20/an-architectural-decision-containers-on-bare-metal-or-on-virtual-machines/):
+Regulated industries favor bare metal for simpler security posture:
 
 - **Single-tenant eliminates multi-tenant risks:** "When you're the only tenant on a physical server, entire categories of risks disappear."
-- **[Container compliance is harder](https://www.upwind.io/glossary/container-compliance-everything-you-need-to-know):** Traditional infra uses periodic scans; containers need continuous, automated controls
+- **Container compliance is harder:** Traditional infra uses periodic scans; containers need continuous, automated controls
 - **Shared kernel risk:** All containers share the host kernel—a compromise in one can affect others
 - **Simpler audit trail:** Single box, single purpose, direct hardware control (BIOS, NUMA, passthrough)
 
@@ -155,9 +155,9 @@ Kubernetes is the **de facto enterprise standard**. Companies selling to Global 
 
 If you want more than Docker Compose but less than full Kubernetes, consider these options:
 
-### [Docker Swarm](https://docs.docker.com/engine/swarm/)
+### Docker Swarm
 
-**Status:** [Actively maintained by Mirantis](https://www.mirantis.com/blog/swarm-is-here-to-stay-and-keeps-getting-better-in-security-and-ease-of-operations/); 100+ customers running 10,000+ nodes in production.
+**Status:** Actively maintained by Mirantis; 100+ customers running 10,000+ nodes in production.
 
 | Aspect | Details |
 |--------|---------|
@@ -183,9 +183,9 @@ services:
 
 **Verdict:** Excellent fit for our use case if we want container orchestration without K8s complexity.
 
-### [HashiCorp Nomad](https://developer.hashicorp.com/nomad)
+### HashiCorp Nomad
 
-**Status:** Production-ready; [used at Cloudflare, Pandora](https://www.nomadproject.io/use-cases); tested with [2M containers](https://developer.hashicorp.com/nomad/docs/what-is-nomad).
+**Status:** Production-ready; used at Cloudflare, Pandora; tested with 2M containers.
 
 | Aspect | Details |
 |--------|---------|
@@ -196,9 +196,9 @@ services:
 
 **Verdict:** Strong fit if you have mixed workloads (containers + legacy VMs) or already use HashiCorp tools.
 
-### [K3s](https://k3s.io/) (Lightweight Kubernetes)
+### K3s (Lightweight Kubernetes)
 
-**Status:** [CNCF certified](https://www.cncf.io/projects/k3s/); <70MB binary; maintained by SUSE.
+**Status:** CNCF certified; <70MB binary; maintained by SUSE.
 
 | Aspect | Details |
 |--------|---------|
@@ -209,9 +209,9 @@ services:
 
 **Verdict:** Best choice if you anticipate future Kubernetes migration or need K8s ecosystem access today.
 
-### [Podman](https://podman.io/) + [Quadlet](https://docs.podman.io/en/latest/markdown/podman-systemd.unit.5.html) (systemd)
+### Podman + Quadlet (systemd)
 
-**Status:** Mature; daemonless; [Red Hat supported](https://www.redhat.com/en/topics/containers/what-is-podman).
+**Status:** Mature; daemonless; Red Hat supported.
 
 | Aspect | Details |
 |--------|---------|
@@ -496,20 +496,3 @@ Deploy on 3 VMs/bare-metal servers using:
 - [Nomad Documentation](https://developer.hashicorp.com/nomad/docs/what-is-nomad)
 - [K3s Documentation](https://docs.k3s.io)
 - [Podman Quadlet - DEV Community](https://dev.to/mcheremnov/podman-quadlet-modern-systemd-integration-2i7g)
-
-### Industry Surveys & Statistics
-- [CNCF Annual Survey 2023](https://www.cncf.io/reports/cncf-annual-survey-2023/) - 88% K8s adoption, 75% Helm usage
-- [Spectro Cloud: State of Production Kubernetes 2023](https://info.spectrocloud.com/report-kubernetes-2023) - 76% complexity barrier
-- [Komodor: Kubernetes in the Enterprise 2025](https://komodor.com/blog/kubernetes-in-the-enterprise-2025-report/) - 34 workdays lost to troubleshooting
-- [Flexera: State of the Cloud 2024](https://www.flexera.com/blog/finops/cloud-computing-trends-flexera-2024-state-of-the-cloud-report/) - Cloud waste statistics
-- [Plural: Is Kubernetes Worth It?](https://www.plural.sh/blog/is-kubernetes-worth-it/) - 61% plan to shrink K8s footprint
-
-### Bare Metal & Cost Analysis
-- [ITBroker: Bare Metal Advantage vs AWS](https://www.itbroker.com/podcast/bare-metal-advantage-vs-aws) - $12.9M savings case study
-- [Medium: We Migrated Back to Dedicated Servers](https://medium.com/@kp9810113/kubernetes-vs-bare-metal-we-migrated-back-to-dedicated-servers-and-saved-12k-month-220ee64c7dc9)
-- [Naviteq: What Kubernetes Really Costs](https://www.naviteq.io/blog/what-kubernetes-really-costs-kubernetes-cost-optimization/) - 35% operational overhead
-- [Dan McKinley: Choose Boring Technology](https://mcfunley.com/choose-boring-technology)
-
-### Security & Compliance
-- [CNCF: Containers on Bare Metal or VMs](https://www.cncf.io/blog/2025/11/20/an-architectural-decision-containers-on-bare-metal-or-on-virtual-machines/)
-- [Upwind: Container Compliance Guide](https://www.upwind.io/glossary/container-compliance-everything-you-need-to-know)
