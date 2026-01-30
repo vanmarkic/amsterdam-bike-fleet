@@ -20,8 +20,16 @@ tauri = { version = "2", features = [] }
 tauri-plugin-shell = "2"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-rusqlite = { version = "0.32", features = ["bundled"] }
+rusqlite = { version = "0.32", features = ["bundled"], optional = true }
 tokio = { version = "1.0", features = ["full"] }
+
+# PostgreSQL support (for on-premise HA deployments)
+# Why tokio-postgres?
+# - Async-first design, works perfectly with Tauri's async runtime
+# - Native PostgreSQL protocol (no libpq dependency)
+# - Connection pooling via deadpool
+tokio-postgres = { version = "0.7", optional = true }
+deadpool-postgres = { version = "0.14", optional = true }
 thiserror = "2.0"
 chrono = { version = "0.4", features = ["serde"] }
 
@@ -62,3 +70,10 @@ fjadra = "0.1"
 [features]
 # This feature is used for production builds or when a dev server is not specified
 custom-protocol = ["tauri/custom-protocol"]
+
+# Database backend selection
+# Default: SQLite (embedded, for standalone desktop use)
+# PostgreSQL: For on-premise HA deployments with Patroni cluster
+default = ["sqlite"]
+sqlite = ["dep:rusqlite"]
+postgres = ["dep:tokio-postgres", "dep:deadpool-postgres"]
